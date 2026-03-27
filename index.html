@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安心管家 - 專業系統櫃設計安裝</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --white: #FFFFFF;
+            --cream: #F9F7F4;
+            --light-gray: #E8E5E1;
+            --warm-gray: #A39B93;
+            --dark-gray: #4A4A4A;
+            --wood: #C9A87C;
+            --wood-dark: #B39368;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 300;
+            color: var(--dark-gray);
+            background: var(--white);
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: box-shadow 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--dark-gray);
+            letter-spacing: 2px;
+        }
+
+        .logo img {
+            height: 160px;
+            width: auto;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark-gray);
+            font-size: 15px;
+            font-weight: 300;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--wood);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: var(--dark-gray);
+            transition: all 0.3s ease;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: url('https://api.kuse.ai/api/folder/v1/file/75cbec2df0ba24c9b2b19fc5b4a1a34afd9b43a6258fb44a49980d90c5ca6a81_1837067.jpeg') center/cover no-repeat;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-content {
+            position: relative;
+            text-align: center;
+            max-width: 800px;
+            padding: 0 24px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 400;
+            color: var(--dark-gray);
+            margin-bottom: 24px;
+            letter-spacing: 4px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--warm-gray);
+            margin-bottom: 48px;
+            letter-spacing: 2px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: var(--wood);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+
+        .cta-button:hover {
+            background: var(--wood-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(201, 168, 124, 0.3);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 120px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 80px;
+            color: var(--dark-gray);
+            letter-spacing: 3px;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--white);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 32px;
+            letter-spacing: 2px;
+        }
+
+        .about-text p {
+            font-size: 16px;
+            line-height: 2;
+            margin-bottom: 48px;
+            color: var(--warm-gray);
+        }
+
+        .about-image {
+            width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .feature-card {
+            background: var(--cream);
+            padding: 32px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--warm-gray);
+        }
+
+        /* Services Section */
+        .services {
+            background: var(--cream);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+        }
+
+        .service-card {
+            background: var(--white);
+            padding: 48px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-card h3 {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 16px;
+            color: var(--dark-gray);
+            letter-spacing: 2px;
+        }
+
+        .service-card p {
+            font-size: 15px;
+            color: var(--warm-gray);
+            line-height: 1.9;
+        }
+
+        /* Portfolio Section */
+        .portfolio {
+            background: var(--white);
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+        }
+
+        .portfolio-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .portfolio-item img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .portfolio-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .portfolio-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+            color: var(--white);
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        /* Process Section */
+        .process {
+            background: var(--cream);
+        }
+
+        .process-timeline {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 48px;
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .process-timeline::before {
+            content: '';
+            position: absolute;
+            top: 50px;
+            left: 12.5%;
+            right: 12.5%;
+            height: 2px;
+            background: var(--light-gray);
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .process-number {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            background: var(--white);
+            border: 2px solid var(--light-gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--wood);
+            position: relative;
+            z-index: 1;
+        }
+
+        .process-step h3 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .process-step p {
+            font-size: 14px;
+            color: var(--warm-gray);
+        }
+
+        /* Contact Section */
+        .contact {
+            background: var(--cream);
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+        }
+
+        .contact-info h3 {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 32px;
+            letter-spacing: 2px;
+        }
+
+        .contact-item {
+            margin-bottom: 24px;
+        }
+
+        .contact-item strong {
+            display: block;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--dark-gray);
+        }
+
+        .contact-item span {
+            color: var(--warm-gray);
+            font-size: 15px;
+        }
+
+        .contact-form {
+            background: var(--white);
+            padding: 48px;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--light-gray);
+            border-radius: 4px;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--wood);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: var(--wood);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+
+        .submit-button:hover {
+            background: var(--wood-dark);
+        }
+
+        /* Footer */
+        footer {
+            background: #6B6560;
+            color: var(--cream);
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+        }
+
+        .copyright {
+            font-size: 14px;
+            color: var(--light-gray);
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(232, 229, 225, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.98);
+                flex-direction: column;
+                padding: 40px;
+                gap: 24px;
+                transition: left 0.3s ease;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process-timeline {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .process-timeline::before {
+                display: none;
+            }
+
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            section {
+                padding: 80px 0;
+            }
+
+            .section-title {
+                font-size: 28px;
+                margin-bottom: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="nav">
+        <div class="container">
+            <div class="logo">
+                <img src="logo.png" alt="安心管家 Logo">
+                <span>安心管家 系統櫃設計服務</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">首頁</a></li>
+                <li><a href="#about">關於我們</a></li>
+                <li><a href="#services">服務項目</a></li>
+                <li><a href="#portfolio">作品展示</a></li>
+                <li><a href="#contact">聯絡我們</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>用心打造，安心入住</h1>
+            <p>專業系統櫃設計安裝 ・ 為您量身訂製理想空間</p>
+            <a href="#contact" class="cta-button">免費諮詢</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">關於安心管家</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>安心管家有限公司秉持「簡約、品質、安心」的理念，專注於系統櫃設計與安裝服務。我們相信，好的收納設計能讓生活更加從容優雅。從丈量、設計到安裝，每一個環節都由專業團隊細心把關，為您打造兼具美感與實用性的居家空間。</p>
+                    <div class="features">
+                        <div class="feature-card">
+                            <div class="feature-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A39B93" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 14 15 14 15 21"/></svg></div>
+                            <h3>免費到府丈量</h3>
+                            <p>專業團隊到府精準丈量</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A39B93" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7v2l10 5 10-5V7L12 2z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                            <h3>客製化設計</h3>
+                            <p>量身訂製專屬空間</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A39B93" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.2a2 2 0 0 1-2.83 0l-.1-.1a2 2 0 0 1 0-2.83l6.83-6.73A6 6 0 0 1 18.57 2.53L14.7 6.3z"/></svg></div>
+                            <h3>專業安裝團隊</h3>
+                            <p>經驗豐富施工品質保證</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="https://api.kuse.ai/api/folder/v1/file/6d1d17860a9e96a334bb77806ac41c75958262b2c208f78a9cce54e28daca314_1818612.jpeg" alt="書房規劃">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <h2 class="section-title">服務項目</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <h3>客廳系統櫃</h3>
+                    <p>電視櫃、展示櫃、收納櫃，打造整潔有序的生活空間。結合美學與機能，讓客廳成為家人共享的溫馨場域。</p>
+                </div>
+                <div class="service-card">
+                    <h3>臥室衣櫃</h3>
+                    <p>量身訂製衣櫃系統，善用每一寸空間。從掛衣區到抽屜配置，完美符合您的收納需求。</p>
+                </div>
+                <div class="service-card">
+                    <h3>廚房收納</h3>
+                    <p>系統廚櫃設計，讓烹飪更加得心應手。優化動線規劃，打造高效能的廚房空間。</p>
+                </div>
+                <div class="service-card">
+                    <h3>書房規劃</h3>
+                    <p>書櫃、工作桌整合設計，營造專注的工作環境。結合收納與展示，提升工作效率。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section class="portfolio" id="portfolio">
+        <div class="container">
+            <h2 class="section-title">作品展示</h2>
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <img src="https://api.kuse.ai/api/folder/v1/file/75cbec2df0ba24c9b2b19fc5b4a1a34afd9b43a6258fb44a49980d90c5ca6a81_1837067.jpeg" alt="客廳系統櫃">
+                    <div class="portfolio-caption">客廳系統櫃</div>
+                </div>
+                <div class="portfolio-item">
+                    <img src="https://api.kuse.ai/api/folder/v1/file/0348e9fa4d504f334b605cd38e04a76d718ef7074c196faf48de6ee4a2bcd1a6_1818610.jpeg" alt="臥室衣櫃">
+                    <div class="portfolio-caption">臥室衣櫃</div>
+                </div>
+                <div class="portfolio-item">
+                    <img src="https://api.kuse.ai/api/folder/v1/file/d009af9add4ea31abc2bb06c257881a0789e6585520e488f043a84c62b04e7b0_1818614.jpeg" alt="廚房收納">
+                    <div class="portfolio-caption">廚房收納</div>
+                </div>
+                <div class="portfolio-item">
+                    <img src="https://api.kuse.ai/api/folder/v1/file/6d1d17860a9e96a334bb77806ac41c75958262b2c208f78a9cce54e28daca314_1818612.jpeg" alt="書房規劃">
+                    <div class="portfolio-caption">書房規劃</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process">
+        <div class="container">
+            <h2 class="section-title">服務流程</h2>
+            <div class="process-timeline">
+                <div class="process-step">
+                    <div class="process-number">1</div>
+                    <h3>預約諮詢</h3>
+                    <p>聯繫我們，說明您的需求與期望</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-number">2</div>
+                    <h3>到府丈量</h3>
+                    <p>專業團隊現場精準測量與評估</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-number">3</div>
+                    <h3>設計規劃</h3>
+                    <p>量身打造專屬設計方案與報價</p>
+                </div>
+                <div class="process-step">
+                    <div class="process-number">4</div>
+                    <h3>施工安裝</h3>
+                    <p>專業施工團隊完美呈現設計</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">聯絡我們</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>聯絡資訊</h3>
+                    <div class="contact-item">
+                        <strong>電話</strong>
+                        <span>0936-625-601</span>
+                    </div>
+                    <div class="contact-item">
+                        <strong>Email</strong>
+                        <span>goodcaring2010@gmail.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <strong>地址</strong>
+                        <span>台中市北屯區文心路四段955號10樓之2</span>
+                    </div>
+                    <div class="contact-item">
+                        <strong>LINE ID</strong>
+                        <span>0936625601</span>
+                    </div>
+                    <div class="contact-item">
+                        <strong>營業時間</strong>
+                        <span>週一至週五 09:00 - 18:00</span>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h3 style="font-size: 18px; font-weight: 400; letter-spacing: 1px; margin-bottom: 12px;">與我們聯繫</h3>
+                    <p style="color: var(--warm-gray); font-size: 15px; line-height: 1.9; margin-bottom: 20px;">
+                        為了更快速回覆您的需求，請使用左側聯絡資訊（電話 / Email）與我們聯繫。
+                    </p>
+                    <a href="tel:0936625601" class="cta-button" style="padding: 12px 24px; border-radius: 8px; letter-spacing: 1px;">立即來電</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">安心管家</div>
+                <div class="copyright">
+                    © 2024 安心管家有限公司 版權所有
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Hamburger Menu Toggle
+        const hamburger = document.getElementById(`hamburger`);
+        const navLinks = document.getElementById(`navLinks`);
+
+        hamburger.addEventListener(`click`, () => {
+            navLinks.classList.toggle(`active`);
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll(`.nav-links a`).forEach(link => {
+            link.addEventListener(`click`, () => {
+                navLinks.classList.remove(`active`);
+            });
+        });
+
+        // Navbar scroll effect
+        const nav = document.getElementById(`nav`);
+        window.addEventListener(`scroll`, () => {
+            if (window.scrollY > 50) {
+                nav.classList.add(`scrolled`);
+            } else {
+                nav.classList.remove(`scrolled`);
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: `0px 0px -100px 0px`
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add(`visible`);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll(`section`).forEach(section => {
+            observer.observe(section);
+        });
+
+        // Contact form removed (use contact info instead)
+    </script>
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>
