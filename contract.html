@@ -141,19 +141,31 @@
 
         <div class="form-row">
             <div class="form-group">
+                <label>出租人姓名 <span class="req">*</span></label>
+                <input type="text" id="landlordName" placeholder="請輸入出租人姓名">
+            </div>
+            <div class="form-group">
                 <label>房號 <span class="req">*</span></label>
                 <input type="text" id="roomNumber" placeholder="例：101、A棟201">
             </div>
+        </div>
+        <div class="form-row full">
             <div class="form-group">
-                <label>月租金（元）<span class="req">*</span></label>
-                <input type="number" id="monthlyRent" value="6000" min="0">
+                <label>出租物件地址 <span class="req">*</span></label>
+                <input type="text" id="landlordAddress" placeholder="請輸入完整地址">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
+                <label>月租金（元）<span class="req">*</span></label>
+                <input type="number" id="monthlyRent" value="6000" min="0">
+            </div>
+            <div class="form-group">
                 <label>押金（元）<span class="req">*</span></label>
                 <input type="number" id="deposit" placeholder="例：12000" min="0">
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>起始電度（度）</label>
                 <input type="number" id="startElec" placeholder="0" min="0">
@@ -251,12 +263,7 @@
 </div>
 
 <script>
-const LANDLORD = {
-    name: '黃尚彬',
-    address: '台中市西屯區福康路119巷21號',
-    agent: '陳俊仁',
-    agentPhone: '0936625601'
-};
+const AGENT = { name: '陳俊仁', phone: '0936625601' };
 
 let fd = {};
 let sigDataUrl = '';
@@ -314,13 +321,15 @@ function showStep(n) {
 }
 
 function toStep2() {
+    const lname = document.getElementById('landlordName').value.trim();
+    const laddr = document.getElementById('landlordAddress').value.trim();
     const room = document.getElementById('roomNumber').value.trim();
     const rent = document.getElementById('monthlyRent').value;
     const dep = document.getElementById('deposit').value;
     const s = document.getElementById('startDate').value;
     const e = document.getElementById('endDate').value;
-    if (!room || !rent || !dep || !s || !e) {
-        alert('請填寫所有必填欄位：房號、月租金、押金、租期');
+    if (!lname || !laddr || !room || !rent || !dep || !s || !e) {
+        alert('請填寫所有必填欄位：出租人姓名、地址、房號、月租金、押金、租期');
         return;
     }
     if (new Date(e) <= new Date(s)) {
@@ -345,6 +354,8 @@ function toStep3() {
 
     sigDataUrl = canvas.toDataURL('image/png');
     fd = {
+        landlordName: document.getElementById('landlordName').value.trim(),
+        landlordAddress: document.getElementById('landlordAddress').value.trim(),
         room: document.getElementById('roomNumber').value.trim(),
         rent: document.getElementById('monthlyRent').value,
         deposit: document.getElementById('deposit').value,
@@ -397,9 +408,9 @@ function buildContract() {
         <div class="parties">
             <div class="party-box">
                 <div class="party-title">甲方（出租人）</div>
-                ${LANDLORD.name}<br>
-                <small>${LANDLORD.address}</small><br>
-                <small>代理人：${LANDLORD.agent} ${LANDLORD.agentPhone}</small>
+                ${f.landlordName}<br>
+                <small>${f.landlordAddress}</small><br>
+                <small>代理人：${AGENT.name} ${AGENT.phone}</small>
             </div>
             <div class="party-box">
                 <div class="party-title">乙方（承租人）</div>
@@ -410,7 +421,7 @@ function buildContract() {
         </div>
 
         <div class="article"><strong>第一條（租賃物使用範圍）</strong><br>
-        台中市西屯區福康路119巷21號 <span class="hl">${f.room}</span> 房，附${f.equip}，及一般室內既有現況出租，僅限一般居住使用不得移作他用。</div>
+        ${f.landlordAddress} <span class="hl">${f.room}</span> 房，附${f.equip}，及一般室內既有現況出租，僅限一般居住使用不得移作他用。</div>
 
         <div class="article"><strong>第二條（租賃期限）</strong><br>
         甲乙雙方合意為壹年，自 <span class="hl">${roc(f.startDate)}</span> 至 <span class="hl">${roc(f.endDate)}</span>。</div>
@@ -497,8 +508,8 @@ function buildContract() {
             <div class="sig-col">
                 <div class="sig-label">甲方（出租人）</div>
                 <div class="sig-line">
-                    ${LANDLORD.name}<br>
-                    <small>代理人：${LANDLORD.agent} ${LANDLORD.agentPhone}</small>
+                    ${f.landlordName}<br>
+                    <small>代理人：${AGENT.name} ${AGENT.phone}</small>
                 </div>
             </div>
             <div class="sig-col">
