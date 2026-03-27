@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電子租賃合約 - 安心管家</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --cream: #F9F7F4;
+            --light-gray: #E8E5E1;
+            --warm-gray: #A39B93;
+            --dark-gray: #4A4A4A;
+            --wood: #C9A87C;
+            --wood-dark: #B39368;
+        }
+        body { font-family: 'Noto Sans TC', Arial, sans-serif; background: var(--cream); color: var(--dark-gray); line-height: 1.8; }
+
+        /* Header */
+        header { background: white; padding: 14px 24px; border-bottom: 1px solid var(--light-gray); display: flex; align-items: center; gap: 12px; }
+        header img { height: 48px; }
+        header h1 { font-size: 17px; font-weight: 500; }
+
+        /* Steps */
+        .steps { display: flex; justify-content: center; align-items: center; padding: 24px 16px; }
+        .step { display: flex; align-items: center; }
+        .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--light-gray); color: var(--warm-gray); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; transition: all 0.3s; }
+        .step.active .step-circle { background: var(--wood); color: white; }
+        .step.done .step-circle { background: #5cb85c; color: white; }
+        .step-label { font-size: 13px; margin-left: 8px; color: var(--warm-gray); transition: all 0.3s; }
+        .step.active .step-label { color: var(--dark-gray); font-weight: 500; }
+        .step-line { width: 50px; height: 1px; background: var(--light-gray); margin: 0 10px; }
+
+        /* Container / Card */
+        .container { max-width: 800px; margin: 0 auto; padding: 0 20px 48px; }
+        .card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .card-title { font-size: 17px; font-weight: 600; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--light-gray); }
+
+        /* Form */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-row.full { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; color: var(--warm-gray); margin-bottom: 6px; font-weight: 500; }
+        label .req { color: #e74c3c; margin-left: 2px; }
+        input, select { border: 1px solid var(--light-gray); border-radius: 8px; padding: 10px 14px; font-size: 15px; font-family: inherit; color: var(--dark-gray); transition: border-color 0.2s; background: white; }
+        input:focus, select:focus { outline: none; border-color: var(--wood); }
+
+        /* Buttons */
+        .btn { padding: 11px 26px; border-radius: 8px; font-size: 15px; font-family: inherit; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: var(--wood); color: white; }
+        .btn-primary:hover { background: var(--wood-dark); }
+        .btn-secondary { background: transparent; color: var(--warm-gray); border: 1px solid var(--light-gray); }
+        .btn-secondary:hover { border-color: var(--warm-gray); color: var(--dark-gray); }
+        .btn-green { background: #5cb85c; color: white; }
+        .btn-green:hover { background: #4cae4c; }
+        .btn-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; flex-wrap: wrap; }
+
+        /* Signature */
+        .sig-wrap { border: 1.5px dashed var(--light-gray); border-radius: 10px; background: #fafafa; position: relative; overflow: hidden; }
+        .sig-wrap canvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
+        .sig-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ccc; font-size: 14px; pointer-events: none; white-space: nowrap; }
+        .clear-sig { font-size: 13px; color: var(--warm-gray); background: none; border: none; cursor: pointer; padding: 6px 2px; text-decoration: underline; margin-top: 4px; }
+
+        /* Contract Preview */
+        .contract-preview { font-size: 14px; line-height: 2; }
+        .contract-preview h2 { text-align: center; font-size: 20px; font-weight: 600; margin-bottom: 8px; letter-spacing: 2px; }
+        .contract-preview .subtitle { text-align: center; font-size: 13px; color: var(--warm-gray); margin-bottom: 24px; }
+        .contract-preview .article { margin-bottom: 14px; }
+        .hl { background: #fff8e1; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+        .parties { display: flex; gap: 32px; margin-bottom: 20px; }
+        .party-box { flex: 1; border: 1px solid var(--light-gray); border-radius: 8px; padding: 12px 16px; font-size: 13px; }
+        .party-box .party-title { font-weight: 600; color: var(--wood-dark); margin-bottom: 4px; }
+        .sig-row { display: flex; gap: 32px; margin-top: 32px; }
+        .sig-col { flex: 1; text-align: center; }
+        .sig-col .sig-label { font-size: 13px; color: var(--warm-gray); margin-bottom: 8px; }
+        .sig-col img { max-height: 70px; display: block; margin: 0 auto 4px; }
+        .sig-line { border-top: 1px solid var(--dark-gray); padding-top: 6px; font-size: 13px; }
+        .checklist-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+        .checklist-table th { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+        .checklist-table td { border: 1px solid #ddd; padding: 8px 10px; }
+
+        /* Share box */
+        .share-box { background: #f0f9f0; border: 1px solid #c3e6c3; border-radius: 10px; padding: 16px 20px; margin-top: 20px; }
+        .share-box p { font-size: 13px; color: #3a7a3a; margin-bottom: 10px; }
+        .share-url { display: flex; gap: 8px; }
+        .share-url input { flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid #c3e6c3; background: white; }
+        .share-url button { padding: 8px 14px; font-size: 13px; }
+
+        /* Print */
+        @media print {
+            header, .steps, .btn-actions, .card-title, #printActions, .share-box { display: none !important; }
+            body { background: white; font-size: 12pt; }
+            .card { box-shadow: none; padding: 0; border-radius: 0; }
+            .container { padding: 0; max-width: 100%; }
+            .contract-preview { font-size: 11pt; line-height: 1.8; }
+            .article { margin-bottom: 10px; }
+            .parties { gap: 16px; }
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .card { padding: 20px 16px; }
+            .step-label { display: none; }
+            .step-line { width: 30px; margin: 0 6px; }
+            .parties { flex-direction: column; gap: 12px; }
+            .sig-row { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logo.jpg" alt="安心管家">
+    <h1>電子租賃合約系統</h1>
+</header>
+
+<div class="steps">
+    <div class="step active" id="si1">
+        <div class="step-circle">1</div>
+        <span class="step-label">合約資料</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="si2">
+        <div class="step-circle">2</div>
+        <span class="step-label">承租人資料</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="si3">
+        <div class="step-circle">3</div>
+        <span class="step-label">完成簽署</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ===== STEP 1 ===== -->
+    <div id="sc1" class="card">
+        <div class="card-title">步驟一：填寫合約資料（甲方填寫）</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>房號 <span class="req">*</span></label>
+                <input type="text" id="roomNumber" placeholder="例：101、A棟201">
+            </div>
+            <div class="form-group">
+                <label>月租金（元）<span class="req">*</span></label>
+                <input type="number" id="monthlyRent" value="6000" min="0">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>押金（元）<span class="req">*</span></label>
+                <input type="number" id="deposit" placeholder="例：12000" min="0">
+            </div>
+            <div class="form-group">
+                <label>起始電度（度）</label>
+                <input type="number" id="startElec" placeholder="0" min="0">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>租期起日 <span class="req">*</span></label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+                <label>租期迄日 <span class="req">*</span></label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="form-row full">
+            <div class="form-group">
+                <label>附加設備說明</label>
+                <input type="text" id="equipment" placeholder="電視一部、雙門冰箱一台、冷氣一部、衣櫃一個">
+            </div>
+        </div>
+
+        <div class="btn-actions">
+            <button class="btn btn-primary" onclick="toStep2()">下一步：承租人填寫 →</button>
+        </div>
+    </div>
+
+    <!-- ===== STEP 2 ===== -->
+    <div id="sc2" class="card" style="display:none">
+        <div class="card-title">步驟二：承租人基本資料（乙方填寫）</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>承租人姓名 <span class="req">*</span></label>
+                <input type="text" id="tenantName" placeholder="請輸入姓名">
+            </div>
+            <div class="form-group">
+                <label>身分證號碼 <span class="req">*</span></label>
+                <input type="text" id="tenantId" placeholder="A123456789">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>手機號碼 <span class="req">*</span></label>
+                <input type="tel" id="tenantPhone" placeholder="0912345678">
+            </div>
+            <div class="form-group">
+                <label>戶籍住址</label>
+                <input type="text" id="tenantAddress" placeholder="請輸入戶籍地址">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>緊急聯絡人 <span class="req">*</span></label>
+                <input type="text" id="emergencyName" placeholder="緊急聯絡人姓名">
+            </div>
+            <div class="form-group">
+                <label>緊急聯絡電話 <span class="req">*</span></label>
+                <input type="tel" id="emergencyPhone" placeholder="0912345678">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>與承租人關係</label>
+                <input type="text" id="emergencyRel" placeholder="例：父母、配偶、朋友">
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <label style="display:block; margin-bottom: 8px; font-size:13px; color: var(--warm-gray); font-weight:500;">承租人簽名 <span class="req">*</span></label>
+            <div class="sig-wrap">
+                <canvas id="sigCanvas" height="160"></canvas>
+                <span class="sig-hint" id="sigHint">請在此區域手寫簽名</span>
+            </div>
+            <button class="clear-sig" onclick="clearSig()">✕ 清除重簽</button>
+        </div>
+
+        <div class="btn-actions">
+            <button class="btn btn-secondary" onclick="showStep(1)">← 上一步</button>
+            <button class="btn btn-primary" onclick="toStep3()">產生合約 →</button>
+        </div>
+    </div>
+
+    <!-- ===== STEP 3 ===== -->
+    <div id="sc3" style="display:none">
+        <div class="card" id="contractCard">
+            <div id="contractContent" class="contract-preview"></div>
+        </div>
+        <div class="btn-actions" id="printActions" style="margin-top: 16px;">
+            <button class="btn btn-secondary" onclick="showStep(2)">← 返回修改</button>
+            <button class="btn btn-primary" onclick="window.print()">🖨 列印 / 儲存 PDF</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const LANDLORD = {
+    name: '黃尚彬',
+    address: '台中市西屯區福康路119巷21號',
+    agent: '陳俊仁',
+    agentPhone: '0936625601'
+};
+
+let fd = {};
+let sigDataUrl = '';
+let hasSig = false;
+
+// ===== Canvas Signature =====
+const canvas = document.getElementById('sigCanvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+
+function initCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const w = canvas.parentElement.clientWidth;
+    canvas.width = w * ratio;
+    canvas.height = 160 * ratio;
+    canvas.style.width = w + 'px';
+    canvas.style.height = '160px';
+    ctx.scale(ratio, ratio);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+}
+
+function getXY(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+
+canvas.addEventListener('mousedown', e => { drawing = true; const p = getXY(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getXY(e); ctx.lineTo(p.x, p.y); ctx.stroke(); markSig(); });
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getXY(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, { passive: false });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const p = getXY(e); ctx.lineTo(p.x, p.y); ctx.stroke(); markSig(); }, { passive: false });
+canvas.addEventListener('touchend', () => drawing = false);
+
+function markSig() { hasSig = true; document.getElementById('sigHint').style.display = 'none'; }
+function clearSig() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSig = false;
+    document.getElementById('sigHint').style.display = 'block';
+}
+
+// ===== Steps =====
+function showStep(n) {
+    [1,2,3].forEach(i => {
+        document.getElementById('sc'+i).style.display = i===n ? 'block' : 'none';
+        const el = document.getElementById('si'+i);
+        el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+        el.querySelector('.step-circle').textContent = i < n ? '✓' : i;
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toStep2() {
+    const room = document.getElementById('roomNumber').value.trim();
+    const rent = document.getElementById('monthlyRent').value;
+    const dep = document.getElementById('deposit').value;
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    if (!room || !rent || !dep || !s || !e) {
+        alert('請填寫所有必填欄位：房號、月租金、押金、租期');
+        return;
+    }
+    if (new Date(e) <= new Date(s)) {
+        alert('租期迄日必須晚於起日');
+        return;
+    }
+    showStep(2);
+    setTimeout(initCanvas, 150);
+}
+
+function toStep3() {
+    const name = document.getElementById('tenantName').value.trim();
+    const id = document.getElementById('tenantId').value.trim();
+    const phone = document.getElementById('tenantPhone').value.trim();
+    const em = document.getElementById('emergencyName').value.trim();
+    const ep = document.getElementById('emergencyPhone').value.trim();
+    if (!name || !id || !phone || !em || !ep) {
+        alert('請填寫所有必填欄位：姓名、身分證、手機、緊急聯絡人');
+        return;
+    }
+    if (!hasSig) { alert('請在簽名區完成簽名'); return; }
+
+    sigDataUrl = canvas.toDataURL('image/png');
+    fd = {
+        room: document.getElementById('roomNumber').value.trim(),
+        rent: document.getElementById('monthlyRent').value,
+        deposit: document.getElementById('deposit').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        elec: document.getElementById('startElec').value || '0',
+        equip: document.getElementById('equipment').value.trim() || '電視一部、雙門冰箱一台、冷氣一部、衣櫃一個',
+        name, id, phone,
+        address: document.getElementById('tenantAddress').value.trim() || '（未填）',
+        emName: em,
+        emPhone: ep,
+        emRel: document.getElementById('emergencyRel').value.trim() || '（未填）',
+    };
+    buildContract();
+    showStep(3);
+}
+
+// ===== Date Format =====
+function roc(str) {
+    if (!str) return '　　年　月　日';
+    const d = new Date(str);
+    return `${d.getFullYear()-1911}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+function today() {
+    const d = new Date();
+    return `${d.getFullYear()-1911}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+function num(n) { return Number(n).toLocaleString(); }
+
+// ===== Build Contract =====
+function buildContract() {
+    const f = fd;
+    const items = [
+        ['傢俱','衣櫃','個'],['傢俱','書桌','張'],['傢俱','椅子','張'],
+        ['傢俱','床組','張'],['傢俱','床墊','張'],
+        ['電器','電視','台'],['電器','冷氣','部'],['電器','冰箱','台'],
+        ['水電','馬桶','個'],['水電','洗手台','個'],['水電','水龍頭','組'],
+        ['水電','蓮蓬頭','組'],['其他','鑰匙','支']
+    ];
+    const tableRows = items.map(([cat,name,unit]) => `
+        <tr>
+            <td>${cat}</td><td>${name}</td><td style="text-align:center">1 ${unit}</td>
+            <td>■良好　□損壞</td><td></td>
+        </tr>`).join('');
+
+    document.getElementById('contractContent').innerHTML = `
+        <h2>房屋租賃合約書</h2>
+        <p class="subtitle">房號：${f.room}　　簽署日期：中華民國 ${today()}</p>
+
+        <div class="parties">
+            <div class="party-box">
+                <div class="party-title">甲方（出租人）</div>
+                ${LANDLORD.name}<br>
+                <small>${LANDLORD.address}</small><br>
+                <small>代理人：${LANDLORD.agent} ${LANDLORD.agentPhone}</small>
+            </div>
+            <div class="party-box">
+                <div class="party-title">乙方（承租人）</div>
+                ${f.name}<br>
+                <small>身分證：${f.id}</small><br>
+                <small>手機：${f.phone}</small>
+            </div>
+        </div>
+
+        <div class="article"><strong>第一條（租賃物使用範圍）</strong><br>
+        台中市西屯區福康路119巷21號 <span class="hl">${f.room}</span> 房，附${f.equip}，及一般室內既有現況出租，僅限一般居住使用不得移作他用。</div>
+
+        <div class="article"><strong>第二條（租賃期限）</strong><br>
+        甲乙雙方合意為壹年，自 <span class="hl">${roc(f.startDate)}</span> 至 <span class="hl">${roc(f.endDate)}</span>。</div>
+
+        <div class="article"><strong>第三條（租金及延遲責任）</strong><br>
+        租金由乙方支付甲方每月新台幣 <span class="hl">${num(f.rent)}</span> 元整，於每月10日前支付，乙方逾時未給付租金，於翌日起算應支付甲方每日100元滯納金。（本租金不含稅，如需申報期增加稅金部分由乙方負擔）</div>
+
+        <div class="article"><strong>第四條（留置權行使）</strong><br>
+        乙方未依第三條所定期日給付租金或依約定由乙方應負擔之費用而不會履行者，甲方有權利自行更換鎖頭或停止供應電力、網路、有線電視等，並依民法445條至448條行使留置權或依民法440條終止契約。</div>
+
+        <div class="article"><strong>第五條（押租金約定）</strong><br>
+        乙方應於約定約時，支付甲方押金新台幣 <span class="hl">${num(f.deposit)}</span> 元整，乙方於租約期滿時，甲方應於乙方遷空、交還、而扣除乙方必要支出款項，並經15日內檢查期間確認租賃物有無損害後，附收據無息退還押金。</div>
+
+        <div class="article"><strong>第六條（連帶責任）</strong><br>
+        乙方之保證人或承租人為複數時，乙方之保證人或乙方對甲方以民法272條以負連帶責任。</div>
+
+        <div class="article"><strong>第七條（裝修約定）</strong><br>
+        乙方對於不動產或動產之裝修應得甲方之同意，且不得損壞原有建築結構。乙方所為前項之裝修，於交還租賃物時應負回復原狀之義務。</div>
+
+        <div class="article"><strong>第八條（保管義務免除）</strong><br>
+        甲方對於乙方所有放置於不動產租賃物內之物品不負保管義務。</div>
+
+        <div class="article"><strong>第九條（租賃物保管義務）</strong><br>
+        乙方應以善良管理人之注意保管、使用租賃物。</div>
+
+        <div class="article"><strong>第十條（租賃物損壞之修繕）</strong><br>
+        於承租期間期租賃物於正常使用下損壞由甲方負責修繕，但因不正當使用導致租賃物損壞應由乙方負責修繕，未能修復者，應依甲方提供租賃物價目表（附件）按原價賠償之。</div>
+
+        <div class="article"><strong>第十一條（失火責任）</strong><br>
+        因失火或其他事由導致公共危害，乙方應付與第九條同一責任。</div>
+
+        <div class="article"><strong>第十二條（公共安全責任）</strong><br>
+        屋內不得供非法使用或放置危險物品影響公共安全，否則應負連帶危險責任。租賃期間之自身安全、門戶及公共安全，請謹慎維護，若因個人疏忽造成自身或他人損傷（害），乙方應負完全責任（包括可能涉及之民事或刑事責任）。</div>
+
+        <div class="article"><strong>第十三條（轉租限制）</strong><br>
+        乙方未得甲方之同意不得將租賃物之一部分或全部轉租（借）、頂讓或其他變相之方法使第三人使用租賃物。</div>
+
+        <div class="article"><strong>第十四條（中途遷離）</strong><br>
+        簽約簽訂後於契約結束日前乙方若擬遷離他處，乙方不得向甲方請求租金償還、遷移費及其他任何名目之權利金，而應無條件將租賃物回復甲方，雙方議定違約金為一個月租金，不得異議。乙方應賠償之違約金得由押金中扣抵。</div>
+
+        <div class="article"><strong>第十五條（費用承擔）</strong><br>
+        承租期間所生之用電費，由乙方負擔；網路、有線電視、水費由甲方負擔。</div>
+
+        <div class="article"><strong>第十六條（生活公約之效力）</strong><br>
+        甲方於租賃物公共區域內所公布生活制約視為契約之一部分，其違反者依情勢輕重甲方得請求乙方改善或終止租賃契約。</div>
+
+        <div class="article"><strong>第十七條（租賃物返還責任）</strong><br>
+        乙方於契約期滿、終止、撤銷時，應依照誠信原則返還租賃物並附有回復原狀之義務。</div>
+
+        <div class="article"><strong>第十八條（留置物之處置權）</strong><br>
+        乙方因前條原因遷出時，若有其所有物留置於租賃物內，則視為拋棄所有權，任由甲方處置，乙方不得異議。處置延伸之費用自3000元起（視房屋髒亂收費），由乙方繳交之押金中扣除。</div>
+
+        <div class="article"><strong>第十九條（損害賠償責任及違約金約定）</strong><br>
+        因可歸責於一方當事人之事由，至租賃契約終止，他方得依民法216條之規定，請求損害賠償及懲罰性違約金。</div>
+
+        <div class="article"><strong>第二十條</strong><br>
+        因當事人一方違約，致他方涉訟時，其訴訟之各項費用由敗訴之方負責（包含律師費、車馬費等）。</div>
+
+        <div class="article"><strong>第二十一條（管轄法院約定）</strong><br>
+        因本租賃契約涉訟時，雙方同意以台中地方法院為第一審管轄法院。</div>
+
+        <div class="article"><strong>第二十二條</strong><br>
+        本合約書做成一式兩份，由甲乙雙方各執乙份以資信守。如有未盡事宜依民法之相關規定及雙方以誠實原則協議以書面補充之。</div>
+
+        <br>
+        <div class="article" style="background:#fffbf0; padding: 16px; border-radius: 8px; border-left: 3px solid var(--wood);">
+            <strong>特約條款：</strong><br>
+            1. 秉持使用者付費原則，合約到期需從押金扣除2000-5000元為房屋清潔費，物品損壞或屋況不良，則甲方有權追加補償費用。<br>
+            2. 乙方若有吸毒、聚賭、轟趴、聚眾喧嘩吵鬧或違法使用時，甲方得以視同違約論，終止本契約並得報警處理。<br>
+            3. 本物件禁止飼養寵物，違者視同違約，需扣除一個月押金為違約金並終止合約。<br>
+            4. 馬桶堵塞為個人使用因素造成，修繕費用需由乙方自行負擔。<br>
+            5. 若遺失（忘）感應扣或鑰匙，甲方若有備鑰，房客須管理人員送達現場，乙方需付取服務費600元，此費用不包含感應扣遺失費用，感應扣遺失重新補發，一個為300元整。於上班時間早上10:00-下午6:00，其餘時間請自行聯絡鎖匠。<br>
+            6. 每度電6元，房東得視台電調漲狀況合理修正。
+        </div>
+
+        <br>
+        <div class="article">
+            <strong>承租人基本資料：</strong><br>
+            戶籍住址：${f.address}<br>
+            緊急聯絡人：${f.emName}　電話：${f.emPhone}　關係：${f.emRel}
+        </div>
+
+        <div class="sig-row">
+            <div class="sig-col">
+                <div class="sig-label">甲方（出租人）</div>
+                <div class="sig-line">
+                    ${LANDLORD.name}<br>
+                    <small>代理人：${LANDLORD.agent} ${LANDLORD.agentPhone}</small>
+                </div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-label">乙方（承租人）簽名</div>
+                <img src="${sigDataUrl}" alt="簽名">
+                <div class="sig-line">${f.name}</div>
+            </div>
+        </div>
+
+        <p style="text-align:center; margin-top: 24px; font-size: 13px; color: var(--warm-gray);">
+            中華民國 ${today()} 簽署
+        </p>
+
+        <hr style="border:none; border-top: 1px dashed #ccc; margin: 32px 0 24px;">
+
+        <h3 style="text-align:center; font-size:15px; margin-bottom:12px;">房客入／退房清點表</h3>
+        <p style="font-size:13px; margin-bottom:4px;">
+            房號：<strong>${f.room}</strong>　承租人：${f.name}　起始電度：<strong>${f.elec} 度</strong>
+        </p>
+        <table class="checklist-table">
+            <tr>
+                <th>類別</th><th>項目</th><th style="text-align:center">數量</th>
+                <th>檢查情形</th><th>備註</th>
+            </tr>
+            ${tableRows}
+        </table>
+
+        <div style="display:flex; gap:40px; margin-top:24px; font-size:13px; flex-wrap:wrap;">
+            <span>甲方確認：＿＿＿＿＿＿＿＿</span>
+            <span>乙方確認：＿＿＿＿＿＿＿＿</span>
+            <span>日期：＿＿＿年＿＿月＿＿日</span>
+        </div>
+    `;
+}
+</script>
+</body>
+</html>
