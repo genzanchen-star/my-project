@@ -811,6 +811,10 @@
             });
         });
 
+        // Force scroll to top on load
+        history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+
         // Navbar scroll effect
         const nav = document.getElementById(`nav`);
         window.addEventListener(`scroll`, () => {
