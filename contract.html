@@ -88,6 +88,24 @@
         .share-url input { flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid #c3e6c3; background: white; }
         .share-url button { padding: 8px 14px; font-size: 13px; }
 
+        /* Checklist Editor */
+        .checklist-editor { margin-top: 8px; }
+        .checklist-editor table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .checklist-editor th { background: #f5f5f5; border: 1px solid var(--light-gray); padding: 8px 10px; font-weight: 500; font-size: 13px; color: var(--warm-gray); }
+        .checklist-editor td { border: 1px solid var(--light-gray); padding: 4px 6px; }
+        .checklist-editor input, .checklist-editor select { border: none; padding: 6px 8px; font-size: 14px; font-family: inherit; background: transparent; width: 100%; color: var(--dark-gray); }
+        .checklist-editor input:focus, .checklist-editor select:focus { outline: 1px solid var(--wood); border-radius: 4px; }
+        .del-row { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; padding: 4px 8px; line-height: 1; }
+        .del-row:hover { color: #e74c3c; }
+        .add-row-btn { margin-top: 8px; font-size: 13px; color: var(--wood); background: none; border: 1px dashed var(--wood); border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+        .add-row-btn:hover { background: #fff8f0; }
+        /* Stamp upload */
+        .stamp-upload-area { border: 1.5px dashed var(--light-gray); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative; }
+        .stamp-upload-area:hover { border-color: var(--wood); }
+        .stamp-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .stamp-preview { max-height: 80px; margin: 8px auto 0; display: block; }
+        .stamp-hint { font-size: 13px; color: var(--warm-gray); }
+
         /* Print */
         @media print {
             header, .steps, .btn-actions, .card-title, #printActions, .share-box { display: none !important; }
@@ -183,8 +201,40 @@
         </div>
         <div class="form-row full">
             <div class="form-group">
-                <label>附加設備說明</label>
+                <label>附加設備說明（顯示於合約第一條）</label>
                 <input type="text" id="equipment" placeholder="電視一部、雙門冰箱一台、冷氣一部、衣櫃一個">
+            </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">出租人印章（選填，上傳 PNG 圖片）</label>
+            <div class="stamp-upload-area" id="stampArea">
+                <input type="file" id="stampFile" accept="image/png,image/jpeg" onchange="loadStamp(this)">
+                <div id="stampHintArea">
+                    <div style="font-size:24px; color:var(--light-gray);">🔏</div>
+                    <div class="stamp-hint">點擊上傳印章圖片（PNG / JPG）</div>
+                </div>
+                <img id="stampPreview" class="stamp-preview" style="display:none;" alt="印章預覽">
+                <button type="button" id="stampClear" style="display:none; margin-top:6px; font-size:12px; color:var(--warm-gray); background:none; border:none; cursor:pointer; text-decoration:underline;" onclick="clearStamp(event)">移除印章</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">入退房清點表項目</label>
+            <div class="checklist-editor">
+                <table id="checklistTable">
+                    <thead>
+                        <tr>
+                            <th style="width:90px">類別</th>
+                            <th>項目名稱</th>
+                            <th style="width:60px">數量</th>
+                            <th style="width:70px">單位</th>
+                            <th style="width:36px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="checklistBody"></tbody>
+                </table>
+                <button type="button" class="add-row-btn" onclick="addCheckRow()">＋ 新增項目</button>
             </div>
         </div>
 
@@ -264,6 +314,69 @@
 
 <script>
 const AGENT = { name: '陳俊仁', phone: '0936625601' };
+
+// ===== Stamp =====
+let stampDataUrl = '';
+function loadStamp(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        stampDataUrl = e.target.result;
+        document.getElementById('stampPreview').src = stampDataUrl;
+        document.getElementById('stampPreview').style.display = 'block';
+        document.getElementById('stampHintArea').style.display = 'none';
+        document.getElementById('stampClear').style.display = 'inline-block';
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+function clearStamp(e) {
+    e.stopPropagation();
+    stampDataUrl = '';
+    document.getElementById('stampFile').value = '';
+    document.getElementById('stampPreview').style.display = 'none';
+    document.getElementById('stampHintArea').style.display = 'block';
+    document.getElementById('stampClear').style.display = 'none';
+}
+
+// ===== Checklist =====
+const DEFAULT_ITEMS = [
+    ['傢俱','衣櫃','1','個'],['傢俱','書桌','1','張'],['傢俱','椅子','1','張'],
+    ['傢俱','床組','1','張'],['傢俱','床墊','1','張'],
+    ['電器','電視','1','台'],['電器','冷氣','1','部'],['電器','冰箱','1','台'],
+    ['水電','馬桶','1','個'],['水電','洗手台','1','個'],['水電','水龍頭','1','組'],
+    ['水電','蓮蓬頭','1','組'],['其他','鑰匙','1','支']
+];
+const CATS = ['傢俱','電器','水電','其他'];
+
+function addCheckRow(cat='其他', name='', qty='1', unit='個') {
+    const tb = document.getElementById('checklistBody');
+    const tr = document.createElement('tr');
+    const catOpts = CATS.map(c => `<option${c===cat?' selected':''}>${c}</option>`).join('');
+    tr.innerHTML = `
+        <td><select>${catOpts}</select></td>
+        <td><input type="text" value="${name}" placeholder="項目名稱"></td>
+        <td><input type="number" value="${qty}" min="0" style="text-align:center"></td>
+        <td><input type="text" value="${unit}" placeholder="個/台/組"></td>
+        <td><button class="del-row" onclick="this.closest('tr').remove()">×</button></td>`;
+    tb.appendChild(tr);
+}
+
+function getChecklist() {
+    const rows = document.querySelectorAll('#checklistBody tr');
+    return Array.from(rows).map(tr => {
+        const cells = tr.querySelectorAll('select,input');
+        return {
+            cat: cells[0].value,
+            name: cells[1].value.trim(),
+            qty: cells[2].value,
+            unit: cells[3].value.trim() || '個'
+        };
+    }).filter(r => r.name);
+}
+
+window.addEventListener('load', () => {
+    DEFAULT_ITEMS.forEach(([cat,name,qty,unit]) => addCheckRow(cat,name,qty,unit));
+});
 
 let fd = {};
 let sigDataUrl = '';
@@ -363,6 +476,7 @@ function toStep3() {
         endDate: document.getElementById('endDate').value,
         elec: document.getElementById('startElec').value || '0',
         equip: document.getElementById('equipment').value.trim() || '電視一部、雙門冰箱一台、冷氣一部、衣櫃一個',
+        checklist: getChecklist(),
         name, id, phone,
         address: document.getElementById('tenantAddress').value.trim() || '（未填）',
         emName: em,
@@ -388,18 +502,15 @@ function num(n) { return Number(n).toLocaleString(); }
 // ===== Build Contract =====
 function buildContract() {
     const f = fd;
-    const items = [
-        ['傢俱','衣櫃','個'],['傢俱','書桌','張'],['傢俱','椅子','張'],
-        ['傢俱','床組','張'],['傢俱','床墊','張'],
-        ['電器','電視','台'],['電器','冷氣','部'],['電器','冰箱','台'],
-        ['水電','馬桶','個'],['水電','洗手台','個'],['水電','水龍頭','組'],
-        ['水電','蓮蓬頭','組'],['其他','鑰匙','支']
-    ];
-    const tableRows = items.map(([cat,name,unit]) => `
+    const tableRows = (f.checklist || []).map(r => `
         <tr>
-            <td>${cat}</td><td>${name}</td><td style="text-align:center">1 ${unit}</td>
+            <td>${r.cat}</td><td>${r.name}</td>
+            <td style="text-align:center">${r.qty} ${r.unit}</td>
             <td>■良好　□損壞</td><td></td>
         </tr>`).join('');
+    const stampHtml = stampDataUrl
+        ? `<img src="${stampDataUrl}" style="height:60px; vertical-align:middle; margin-left:8px; opacity:0.85;" alt="印章">`
+        : '';
 
     document.getElementById('contractContent').innerHTML = `
         <h2>房屋租賃合約書</h2>
@@ -508,7 +619,7 @@ function buildContract() {
             <div class="sig-col">
                 <div class="sig-label">甲方（出租人）</div>
                 <div class="sig-line">
-                    ${f.landlordName}<br>
+                    ${f.landlordName} ${stampHtml}<br>
                     <small>代理人：${AGENT.name} ${AGENT.phone}</small>
                 </div>
             </div>
