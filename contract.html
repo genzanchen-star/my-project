@@ -738,17 +738,25 @@ async function generateLink() {
         const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
         const longUrl = location.origin + location.pathname + '?d=' + compressed;
 
-        // 呼叫短網址 API（支援 CORS，免費免登入）
+        // 呼叫短網址 API（is.gd，支援 CORS，免費免登入）
         try {
             const resp = await fetch(
-                'https://api.shrtco.de/v2/shorten?url=' + encodeURIComponent(longUrl),
+                'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl),
                 { signal: AbortSignal.timeout(8000) }
             );
             const json = await resp.json();
-            if (json.ok && json.result && json.result.full_short_link) {
-                shortUrl = json.result.full_short_link;
+            if (json.shorturl) {
+                shortUrl = json.shorturl;
             } else {
-                shortUrl = longUrl; // API 回傳非預期結果，直接用長網址
+                // is.gd 失敗，改用 TinyURL
+                try {
+                    const r2 = await fetch(
+                        'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl),
+                        { signal: AbortSignal.timeout(8000) }
+                    );
+                    const text = await r2.text();
+                    shortUrl = text.startsWith('http') ? text.trim() : longUrl;
+                } catch(e2) { shortUrl = longUrl; }
             }
         } catch(apiErr) {
             console.warn('短網址 API 失敗，使用原始連結：', apiErr);
