@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -293,6 +294,12 @@
                     <input type="text" id="emergencyRel" placeholder="例：父母、配偶、朋友">
                 </div>
             </div>
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>承租人 Email <span class="req">*</span>（合約將自動寄送至此信箱）</label>
+                    <input type="email" id="tenantEmail" placeholder="example@gmail.com">
+                </div>
+            </div>
 
             <div class="btn-actions">
                 <button class="btn btn-secondary" onclick="showStep(1)">← 上一步</button>
@@ -347,16 +354,23 @@
 
                 <div class="btn-actions" style="margin-top: 20px;">
                     <button class="btn btn-green" style="font-size:16px; padding:14px 32px;" onclick="completeSigning()">
-                        ✓ 確認簽署並儲存 PDF
+                        ✓ 確認簽署並寄送合約
                     </button>
                 </div>
+            </div>
+
+            <div id="sigSuccessMsg" style="display:none; margin-top:24px; background:#f0f9f0; border:1px solid #c3e6c3; border-radius:10px; padding:24px; text-align:center;">
+                <div style="font-size:40px; margin-bottom:12px;">✅</div>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
+                <p style="font-size:14px; color:#3a7a3a;">合約已自動寄送至雙方信箱，請確認收件匣（包含垃圾信件夾）。</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-const AGENT = { name: '陳俊仁', phone: '0936625601' };
+const AGENT = { name: '陳俊仁', phone: '0936625601', email: 'goodcaring2010@gmail.com' };
+const EJS = { service: 'service_k6etv1l', template: 'template_3x4j3h6', key: 'tx3vIwADoQyRhQvY5' };
 
 // ===== 印章 =====
 let stampDataUrl = '';
@@ -496,8 +510,13 @@ function toStep3() {
     const phone= document.getElementById('tenantPhone').value.trim();
     const em   = document.getElementById('emergencyName').value.trim();
     const ep   = document.getElementById('emergencyPhone').value.trim();
+    const email = document.getElementById('tenantEmail').value.trim();
     if (!name || !id || !phone || !em || !ep) {
         alert('請填寫所有必填欄位：姓名、身分證、手機、緊急聯絡人');
+        return;
+    }
+    if (!email || !email.includes('@')) {
+        alert('請填寫有效的承租人 Email');
         return;
     }
     buildPreview();
@@ -697,11 +716,16 @@ function collectLandlordData() {
         emPhone:         document.getElementById('emergencyPhone').value.trim(),
         emRel:           document.getElementById('emergencyRel').value.trim() || '（未填）',
         stamp:           stampDataUrl,
+        tenantEmail:     document.getElementById('tenantEmail').value.trim(),
     };
 }
 
 // ===== 產生承租人簽署連結（lz-string 壓縮）=====
 function generateLink() {
+    if (typeof LZString === 'undefined') {
+        alert('壓縮套件尚未載入，請重新整理頁面後再試');
+        return;
+    }
     const data = collectLandlordData();
     try {
         const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
@@ -740,26 +764,57 @@ function loadTenantMode(compressed) {
     }
 }
 
-// ===== 承租人完成簽名、產生 PDF =====
-function completeSigning() {
+// ===== 承租人完成簽名、寄送合約 Email =====
+async function completeSigning() {
     if (!tenantHasSig) { alert('請在上方空白區域完成手寫簽名'); return; }
 
-    const sigDataUrl = tenantCanvas.toDataURL('image/png');
+    const btn = document.querySelector('#tenantSigSection .btn-green');
+    btn.disabled = true;
+    btn.textContent = '寄送中，請稍候...';
+
+    const sigDataUrl = tenantCanvas.toDataURL('image/jpeg', 0.6);
     const sigHtml = `<img class="sig-img" src="${sigDataUrl}" alt="簽名">`;
+    const f = window._tenantData;
 
-    // 將簽名插入合約的簽名欄
-    document.getElementById('tenantContractContent').innerHTML =
-        contractHTML(window._tenantData, sigHtml);
-
-    // 隱藏簽名區塊（列印時不顯示）
+    // 將簽名寫入合約顯示
+    document.getElementById('tenantContractContent').innerHTML = contractHTML(f, sigHtml);
     document.getElementById('tenantSigSection').style.display = 'none';
 
-    // 觸發列印（存成 PDF）
-    setTimeout(() => window.print(), 300);
+    // 產生 email 用的合約 HTML
+    const emailBody = `
+        <div style="font-family:Arial,sans-serif;max-width:800px;margin:auto;padding:20px;">
+            ${contractHTML(f, sigHtml)}
+        </div>`;
+
+    const subject = `房屋租賃合約書 - ${f.room}號房 - ${f.name}`;
+
+    try {
+        // 寄給承租人
+        await emailjs.send(EJS.service, EJS.template, {
+            to_email: f.tenantEmail,
+            subject:  subject,
+            message:  emailBody
+        });
+        // 寄給出租人
+        await emailjs.send(EJS.service, EJS.template, {
+            to_email: AGENT.email,
+            subject:  subject + '（出租人存檔）',
+            message:  emailBody
+        });
+
+        // 顯示成功訊息
+        document.getElementById('sigSuccessMsg').style.display = 'block';
+    } catch(e) {
+        alert('Email 寄送失敗：' + e.message + '\n請截圖合約後手動傳送。');
+        btn.disabled = false;
+        btn.textContent = '確認簽署並寄送合約';
+        document.getElementById('tenantSigSection').style.display = 'block';
+    }
 }
 
 // ===== 頁面載入 =====
 window.addEventListener('load', () => {
+    emailjs.init(EJS.key);
     const params = new URLSearchParams(location.search);
     const compressed = params.get('d');
     if (compressed) {
