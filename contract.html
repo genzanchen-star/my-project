@@ -563,13 +563,13 @@ function contractHTML(f, sigHtml) {
         <div class="parties">
             <div class="party-box">
                 <div class="party-title">甲方（出租人）</div>
-                ${f.landlordName}<br>
+                ${f.landlordName} ${stampHtml}<br>
                 <small>${f.landlordAddress}</small><br>
                 <small>代理人：${AGENT.name} ${AGENT.phone}</small>
             </div>
             <div class="party-box">
                 <div class="party-title">乙方（承租人）</div>
-                ${f.name}<br>
+                ${f.name} ${sigHtml ? `<br>${sigHtml}` : ''}<br>
                 <small>身分證：${f.id}</small><br>
                 <small>手機：${f.phone}</small>
             </div>
@@ -582,7 +582,7 @@ function contractHTML(f, sigHtml) {
         甲乙雙方合意為壹年，自 <span class="hl">${roc(f.startDate)}</span> 至 <span class="hl">${roc(f.endDate)}</span>。</div>
 
         <div class="article"><strong>第三條（租金及延遲責任）</strong><br>
-        租金由乙方支付甲方每月新台幣 <span class="hl">${num(f.rent)}</span> 元整，於每月10日前支付，乙方逾時未給付租金，於翌日起算應支付甲方每日100元滯納金。（本租金不含稅，如需申報期增加稅金部分由乙方負擔）</div>
+        租金由乙方支付甲方每月新台幣 <span class="hl">${num(f.rent)}</span> 元整，於每月10日前支付，乙方逾時未給付租金，於翌日起算應支付甲方每日100元滯納金。</div>
 
         <div class="article"><strong>第四條（留置權行使）</strong><br>
         乙方未依第三條所定期日給付租金或依約定由乙方應負擔之費用而不會履行者，甲方有權利自行更換鎖頭或停止供應電力、網路、有線電視等，並依民法445條至448條行使留置權或依民法440條終止契約。</div>
