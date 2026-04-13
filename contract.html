@@ -452,6 +452,9 @@ function initTenantCanvas() {
     tenantCanvas.style.width = w + 'px';
     tenantCanvas.style.height = '160px';
     tenantCtx.scale(ratio, ratio);
+    // 填白底（避免 JPEG 輸出時透明變黑）
+    tenantCtx.fillStyle = '#ffffff';
+    tenantCtx.fillRect(0, 0, tenantCanvas.width, tenantCanvas.height);
     tenantCtx.strokeStyle = '#1a1a1a';
     tenantCtx.lineWidth = 2;
     tenantCtx.lineCap = 'round';
@@ -475,6 +478,8 @@ function markTenantSig() { tenantHasSig = true; document.getElementById('tenantS
 function clearTenantSig() {
     if (!tenantCtx) return;
     tenantCtx.clearRect(0, 0, tenantCanvas.width, tenantCanvas.height);
+    tenantCtx.fillStyle = '#ffffff';
+    tenantCtx.fillRect(0, 0, tenantCanvas.width, tenantCanvas.height);
     tenantHasSig = false;
     document.getElementById('tenantSigHint').style.display = 'block';
 }
