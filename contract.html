@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/lz-string@1.5.0/libs/lz-string.min.js'"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -356,15 +355,15 @@
 
                 <div class="btn-actions" style="margin-top: 20px;">
                     <button class="btn btn-green" style="font-size:16px; padding:14px 32px;" onclick="completeSigning()">
-                        ✓ 確認簽署並寄送合約
+                        ✓ 確認簽署並下載合約
                     </button>
                 </div>
             </div>
 
             <div id="sigSuccessMsg" style="display:none; margin-top:24px; background:#f0f9f0; border:1px solid #c3e6c3; border-radius:10px; padding:24px; text-align:center;">
                 <div style="font-size:40px; margin-bottom:12px;">✅</div>
-                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
-                <p style="font-size:14px; color:#3a7a3a;">合約已自動寄送至雙方信箱，請確認收件匣（包含垃圾信件夾）。</p>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！PDF 已下載</h3>
+                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已儲存至您的裝置，請將檔案透過 LINE 傳送給出租人。</p>
             </div>
         </div>
     </div>
@@ -372,7 +371,6 @@
 
 <script>
 const AGENT = { name: '陳俊仁', phone: '0936625601', email: 'goodcaring2010@gmail.com' };
-const EJS = { service: 'service_k6etv1l', template: 'template_3x4j3h6', key: 'tx3vIwADoQyRhQvY5' };
 
 // ===== 印章 =====
 let stampDataUrl = '';
@@ -848,42 +846,12 @@ async function completeSigning() {
         console.warn('PDF 產生失敗：', pdfErr);
     }
 
-    // ── 寄送 Email（不含 base64 圖片，避免超過 EmailJS 50KB 限制）──
-    btn.textContent = '寄送 Email 中，請稍候...';
-    // 用文字取代印章與簽名圖，縮小 payload
-    const fEmail = Object.assign({}, f, { stamp: null });
-    const sigPlaceholder = `<span style="display:inline-block;border-bottom:2px solid #333;width:180px;margin-left:8px;">（簽名如PDF附件）</span>`;
-    const emailBody = `
-        <div style="font-family:Arial,sans-serif;max-width:800px;margin:auto;padding:20px;">
-            ${contractHTML(fEmail, sigPlaceholder)}
-            <p style="color:#666;font-size:13px;margin-top:24px;">※ 含承租人手寫簽名之完整 PDF 已於簽署當下自動下載至承租人裝置。</p>
-        </div>`;
-    const subject = `房屋租賃合約書 - ${f.room}號房 - ${f.name}`;
-
-    try {
-        await emailjs.send(EJS.service, EJS.template, {
-            to_email: f.tenantEmail,
-            subject:  subject,
-            message:  emailBody
-        });
-        await emailjs.send(EJS.service, EJS.template, {
-            to_email: AGENT.email,
-            subject:  subject + '（出租人存檔）',
-            message:  emailBody
-        });
-        document.getElementById('sigSuccessMsg').style.display = 'block';
-    } catch(e) {
-        alert('Email 寄送失敗：' + e.message + '\n請截圖合約後手動傳送。');
-        btn.disabled = false;
-        btn.textContent = '確認簽署並寄送合約';
-        document.getElementById('tenantSigSection').style.display = 'block';
-    }
+    document.getElementById('sigSuccessMsg').style.display = 'block';
 }
 
 // ===== 頁面載入 =====
 window.addEventListener('load', () => {
-    emailjs.init(EJS.key);
-    const params = new URLSearchParams(location.search);
+const params = new URLSearchParams(location.search);
     const compressed = params.get('d');
     if (compressed) {
         loadTenantMode(compressed);
