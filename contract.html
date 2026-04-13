@@ -317,7 +317,7 @@
 
             <div class="btn-actions no-print" id="printActions">
                 <button class="btn btn-secondary" onclick="showStep(2)">← 返回修改</button>
-                <button class="btn btn-primary" onclick="generateLink()">產生承租人簽署連結 →</button>
+                <button class="btn btn-primary" id="generateBtn" onclick="generateLink()">產生承租人簽署連結 →</button>
             </div>
         </div>
 
@@ -699,19 +699,35 @@ function collectLandlordData() {
     };
 }
 
-// ===== 產生承租人簽署連結 =====
-function generateLink() {
+// ===== 產生承租人簽署連結（存至 jsonblob.com）=====
+async function generateLink() {
     const data = collectLandlordData();
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '上傳中，請稍候...';
+
     try {
-        const json    = JSON.stringify(data);
-        const encoded = btoa(unescape(encodeURIComponent(json)))
-                        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        const url     = location.origin + location.pathname + '?sign=' + encoded;
+        const res = await fetch('https://jsonblob.com/api/jsonBlob', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('上傳失敗 ' + res.status);
+
+        // ID 在 Location header 的最後一段
+        const loc = res.headers.get('Location') || '';
+        const blobId = loc.split('/').pop();
+        if (!blobId) throw new Error('未取得 ID');
+
+        const url = location.origin + location.pathname + '?id=' + blobId;
         document.getElementById('shareUrl').value = url;
         document.getElementById('shareBox').style.display = 'block';
         document.getElementById('shareBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch(e) {
-        alert('產生連結失敗，請確認印章圖片不要太大，或移除印章後再試');
+        alert('連結產生失敗：' + e.message + '\n請確認網路連線後再試。');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '產生承租人簽署連結 →';
     }
 }
 
@@ -726,21 +742,25 @@ function copyLink() {
     });
 }
 
-// ===== 承租人模式：從 URL 解碼資料 =====
-function initTenantMode(encoded) {
+// ===== 承租人模式：從 jsonblob.com 載入資料 =====
+async function loadTenantMode(blobId) {
     document.getElementById('landlordMode').style.display = 'none';
     document.getElementById('tenantMode').style.display = 'block';
+    document.getElementById('tenantContractContent').innerHTML =
+        '<p style="text-align:center; padding:60px; color:var(--warm-gray);">合約載入中，請稍候...</p>';
+
     try {
-        const padded = encoded.replace(/-/g, '+').replace(/_/g, '/');
-        const data = JSON.parse(decodeURIComponent(escape(atob(padded))));
-        const sigPlaceholder = '';
-        document.getElementById('tenantContractContent').innerHTML = contractHTML(data, sigPlaceholder);
-        setTimeout(initTenantCanvas, 200);
-        // 儲存資料供簽署後使用
+        const res = await fetch('https://jsonblob.com/api/jsonBlob/' + blobId, {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) throw new Error('載入失敗 ' + res.status);
+        const data = await res.json();
         window._tenantData = data;
+        document.getElementById('tenantContractContent').innerHTML = contractHTML(data, '');
+        setTimeout(initTenantCanvas, 200);
     } catch(e) {
         document.getElementById('tenantContractContent').innerHTML =
-            '<p style="color:red; padding:20px;">連結資料有誤，請聯繫出租人重新產生連結。</p>';
+            '<p style="color:red; padding:20px;">合約載入失敗，請聯繫出租人重新產生連結。<br><small>' + e.message + '</small></p>';
     }
 }
 
@@ -764,10 +784,10 @@ function completeSigning() {
 
 // ===== 頁面載入 =====
 window.addEventListener('load', () => {
-    const params   = new URLSearchParams(location.search);
-    const signData = params.get('sign');
-    if (signData) {
-        initTenantMode(signData);
+    const params = new URLSearchParams(location.search);
+    const blobId = params.get('id');
+    if (blobId) {
+        loadTenantMode(blobId);
     } else {
         DEFAULT_ITEMS.forEach(([cat,name,qty,unit]) => addCheckRow(cat,name,qty,unit));
     }
