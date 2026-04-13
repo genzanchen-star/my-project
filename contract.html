@@ -295,12 +295,6 @@
                     <input type="text" id="emergencyRel" placeholder="例：父母、配偶、朋友">
                 </div>
             </div>
-            <div class="form-row full">
-                <div class="form-group">
-                    <label>承租人 Email <span class="req">*</span>（合約將自動寄送至此信箱）</label>
-                    <input type="email" id="tenantEmail" placeholder="example@gmail.com">
-                </div>
-            </div>
 
             <div class="btn-actions">
                 <button class="btn btn-secondary" onclick="showStep(1)">← 上一步</button>
@@ -515,13 +509,8 @@ function toStep3() {
     const phone= document.getElementById('tenantPhone').value.trim();
     const em   = document.getElementById('emergencyName').value.trim();
     const ep   = document.getElementById('emergencyPhone').value.trim();
-    const email = document.getElementById('tenantEmail').value.trim();
     if (!name || !id || !phone || !em || !ep) {
         alert('請填寫所有必填欄位：姓名、身分證、手機、緊急聯絡人');
-        return;
-    }
-    if (!email || !email.includes('@')) {
-        alert('請填寫有效的承租人 Email');
         return;
     }
     buildPreview();
@@ -721,7 +710,6 @@ function collectLandlordData() {
         emPhone:         document.getElementById('emergencyPhone').value.trim(),
         emRel:           document.getElementById('emergencyRel').value.trim() || '（未填）',
         stamp:           stampDataUrl,
-        tenantEmail:     document.getElementById('tenantEmail').value.trim(),
     };
 }
 
