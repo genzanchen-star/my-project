@@ -723,20 +723,46 @@ function collectLandlordData() {
 }
 
 // ===== 產生承租人簽署連結（lz-string 壓縮）=====
-function generateLink() {
+async function generateLink() {
     if (typeof LZString === 'undefined') {
         alert('壓縮套件尚未載入，請重新整理頁面後再試');
         return;
     }
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '產生連結中，請稍候...';
+
     const data = collectLandlordData();
+    let shortUrl = '';
     try {
         const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
-        const url = location.origin + location.pathname + '?d=' + compressed;
-        document.getElementById('shareUrl').value = url;
+        const longUrl = location.origin + location.pathname + '?d=' + compressed;
+
+        // 呼叫短網址 API（支援 CORS，免費免登入）
+        try {
+            const resp = await fetch(
+                'https://api.shrtco.de/v2/shorten?url=' + encodeURIComponent(longUrl),
+                { signal: AbortSignal.timeout(8000) }
+            );
+            const json = await resp.json();
+            if (json.ok && json.result && json.result.full_short_link) {
+                shortUrl = json.result.full_short_link;
+            } else {
+                shortUrl = longUrl; // API 回傳非預期結果，直接用長網址
+            }
+        } catch(apiErr) {
+            console.warn('短網址 API 失敗，使用原始連結：', apiErr);
+            shortUrl = longUrl;
+        }
+
+        document.getElementById('shareUrl').value = shortUrl;
         document.getElementById('shareBox').style.display = 'block';
         document.getElementById('shareBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch(e) {
         alert('連結產生失敗：' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '產生承租人簽署連結 →';
     }
 }
 
