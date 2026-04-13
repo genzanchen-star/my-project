@@ -859,17 +859,43 @@ async function completeSigning() {
         }
 
         const fileName = `租賃合約_${f.room}號房_${f.name}.pdf`;
-
-        // 產生 blob，綁定到頁面下載按鈕（相容所有瀏覽器，包含 LINE WebView）
         const blob = pdf.output('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        const dlBtn = document.getElementById('pdfDownloadBtn');
-        dlBtn.href = blobUrl;
-        dlBtn.download = fileName;
-
-        // 桌面瀏覽器額外自動觸發下載
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) { pdf.save(fileName); }
+        const dlBtn = document.getElementById('pdfDownloadBtn');
+
+        if (!isMobile) {
+            // 桌面：自動下載，按鈕也可重複下載
+            pdf.save(fileName);
+            dlBtn.addEventListener('click', e => { e.preventDefault(); pdf.save(fileName); });
+
+        } else {
+            const pdfFile = new File([blob], fileName, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                // Web Share API：手機原生分享面板，LINE / Safari / Chrome 皆支援，不會跳外部應用程式警告
+                dlBtn.innerHTML = '⬆ 儲存 / 傳送合約 PDF';
+                dlBtn.removeAttribute('download');
+                dlBtn.addEventListener('click', async e => {
+                    e.preventDefault();
+                    try {
+                        await navigator.share({ files: [pdfFile], title: '租賃合約' });
+                    } catch(shareErr) {
+                        if (shareErr.name !== 'AbortError') {
+                            // 使用者取消以外的錯誤，改用 base64 下載
+                            const dataUri = pdf.output('datauristring');
+                            const a = document.createElement('a');
+                            a.href = dataUri; a.download = fileName;
+                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                        }
+                    }
+                });
+
+            } else {
+                // 不支援 Web Share API：用 base64 data URI（避免 blob:// 觸發外部應用程式警告）
+                dlBtn.href = pdf.output('datauristring');
+                dlBtn.download = fileName;
+            }
+        }
 
     } catch(pdfErr) {
         console.warn('PDF 產生失敗：', pdfErr);
