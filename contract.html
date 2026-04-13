@@ -6,8 +6,10 @@
     <title>電子租賃合約 - 安心管家</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/lz-string@1.5.0/libs/lz-string.min.js'"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -770,7 +772,7 @@ async function completeSigning() {
 
     const btn = document.querySelector('#tenantSigSection .btn-green');
     btn.disabled = true;
-    btn.textContent = '寄送中，請稍候...';
+    btn.textContent = '產生 PDF 中，請稍候...';
 
     const sigDataUrl = tenantCanvas.toDataURL('image/jpeg', 0.6);
     const sigHtml = `<img class="sig-img" src="${sigDataUrl}" alt="簽名">`;
@@ -780,29 +782,69 @@ async function completeSigning() {
     document.getElementById('tenantContractContent').innerHTML = contractHTML(f, sigHtml);
     document.getElementById('tenantSigSection').style.display = 'none';
 
-    // 產生 email 用的合約 HTML
+    // ── 產生 PDF ──
+    try {
+        const contractEl = document.getElementById('tenantContractContent');
+        const canvas = await html2canvas(contractEl, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const imgW = pageW - margin * 2;
+        const scale = imgW / (canvas.width / 2); // canvas was rendered @2x
+        const totalH = (canvas.height / 2) * scale;
+        const pageContentH = pageH - margin * 2;
+
+        let yOffset = 0;
+        let page = 0;
+        while (yOffset < totalH) {
+            if (page > 0) pdf.addPage();
+            // slice source canvas pixels for this page
+            const srcY = (yOffset / scale) * 2;           // back to @2x pixels
+            const srcH = Math.min((pageContentH / scale) * 2, canvas.height - srcY);
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width  = canvas.width;
+            sliceCanvas.height = srcH;
+            sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+            const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
+            const sliceH = srcH / 2 * scale;              // mm height on page
+            pdf.addImage(sliceImg, 'JPEG', margin, margin, imgW, sliceH);
+            yOffset += pageContentH;
+            page++;
+        }
+
+        const filename = `租賃合約_${f.room}號房_${f.name}.pdf`;
+        pdf.save(filename);
+    } catch(pdfErr) {
+        console.warn('PDF 產生失敗：', pdfErr);
+    }
+
+    // ── 寄送 Email ──
+    btn.textContent = '寄送 Email 中，請稍候...';
     const emailBody = `
         <div style="font-family:Arial,sans-serif;max-width:800px;margin:auto;padding:20px;">
             ${contractHTML(f, sigHtml)}
         </div>`;
-
     const subject = `房屋租賃合約書 - ${f.room}號房 - ${f.name}`;
 
     try {
-        // 寄給承租人
         await emailjs.send(EJS.service, EJS.template, {
             to_email: f.tenantEmail,
             subject:  subject,
             message:  emailBody
         });
-        // 寄給出租人
         await emailjs.send(EJS.service, EJS.template, {
             to_email: AGENT.email,
             subject:  subject + '（出租人存檔）',
             message:  emailBody
         });
-
-        // 顯示成功訊息
         document.getElementById('sigSuccessMsg').style.display = 'block';
     } catch(e) {
         alert('Email 寄送失敗：' + e.message + '\n請截圖合約後手動傳送。');
