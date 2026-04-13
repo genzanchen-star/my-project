@@ -807,29 +807,52 @@ async function completeSigning() {
     document.getElementById('tenantContractContent').innerHTML = contractHTML(f, sigHtml);
     document.getElementById('tenantSigSection').style.display = 'none';
 
-    // ── 產生 PDF（使用 html() + autoPaging 避免文字截斷）──
+    // ── 產生 PDF（html2canvas 截圖 → 圖片嵌入，中文不亂碼）──
     try {
         const contractEl = document.getElementById('tenantContractContent');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-        const filename = `租賃合約_${f.room}號房_${f.name}.pdf`;
-        await new Promise((resolve) => {
-            pdf.html(contractEl, {
-                callback: (doc) => { doc.save(filename); resolve(); },
-                x: 10,
-                y: 10,
-                width: 190,
-                windowWidth: 800,
-                autoPaging: 'text',
-                margin: [10, 10, 10, 10],
-                html2canvas: {
-                    scale: 1.5,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false
-                }
-            });
+        const canvas = await html2canvas(contractEl, {
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
         });
+
+        const { jsPDF } = window.jspdf;
+        const pdf  = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        const margin = 10;
+        const imgW  = pdf.internal.pageSize.getWidth()  - margin * 2; // 190mm
+        const pageH = pdf.internal.pageSize.getHeight() - margin * 2; // 277mm
+        const mmPerPx   = imgW / canvas.width;          // mm per pixel
+        const pagePx    = pageH / mmPerPx;              // pixels per page
+        const ctx = canvas.getContext('2d');
+
+        // 找最近的全白列作為斷頁點，避免截斷文字
+        function findBreakY(targetPx) {
+            const limit = Math.max(0, targetPx - 120);
+            for (let y = Math.floor(targetPx); y > limit; y--) {
+                const d = ctx.getImageData(0, y, canvas.width, 1).data;
+                let whites = 0;
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i] > 238 && d[i+1] > 238 && d[i+2] > 238) whites++;
+                }
+                if (whites / canvas.width > 0.97) return y;
+            }
+            return Math.floor(targetPx);
+        }
+
+        let srcY = 0, page = 0;
+        while (srcY < canvas.height) {
+            if (page > 0) pdf.addPage();
+            const rawEnd  = srcY + pagePx;
+            const endY    = rawEnd >= canvas.height ? canvas.height : findBreakY(rawEnd);
+            const sliceH  = endY - srcY;
+            const slice   = document.createElement('canvas');
+            slice.width   = canvas.width;
+            slice.height  = sliceH;
+            slice.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+            pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, imgW, sliceH * mmPerPx);
+            srcY = endY;
+            page++;
+        }
+
+        pdf.save(`租賃合約_${f.room}號房_${f.name}.pdf`);
     } catch(pdfErr) {
         console.warn('PDF 產生失敗：', pdfErr);
     }
