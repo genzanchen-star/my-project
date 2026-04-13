@@ -865,11 +865,15 @@ async function completeSigning() {
         console.warn('PDF 產生失敗：', pdfErr);
     }
 
-    // ── 寄送 Email ──
+    // ── 寄送 Email（不含 base64 圖片，避免超過 EmailJS 50KB 限制）──
     btn.textContent = '寄送 Email 中，請稍候...';
+    // 用文字取代印章與簽名圖，縮小 payload
+    const fEmail = Object.assign({}, f, { stamp: null });
+    const sigPlaceholder = `<span style="display:inline-block;border-bottom:2px solid #333;width:180px;margin-left:8px;">（簽名如PDF附件）</span>`;
     const emailBody = `
         <div style="font-family:Arial,sans-serif;max-width:800px;margin:auto;padding:20px;">
-            ${contractHTML(f, sigHtml)}
+            ${contractHTML(fEmail, sigPlaceholder)}
+            <p style="color:#666;font-size:13px;margin-top:24px;">※ 含承租人手寫簽名之完整 PDF 已於簽署當下自動下載至承租人裝置。</p>
         </div>`;
     const subject = `房屋租賃合約書 - ${f.room}號房 - ${f.name}`;
 
