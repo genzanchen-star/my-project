@@ -78,7 +78,8 @@
         .sig-row { display: flex; gap: 32px; margin-top: 32px; }
         .sig-col { flex: 1; text-align: center; }
         .sig-col .sig-label { font-size: 13px; color: var(--warm-gray); margin-bottom: 8px; }
-        .sig-col img.sig-img { max-height: 70px; display: block; margin: 0 auto 4px; }
+        .sig-col img.sig-img { max-height: 70px; max-width: 100%; width: auto; display: block; margin: 0 auto 4px; object-fit: contain; }
+        .party-box img.sig-img { max-height: 44px; max-width: 100%; width: auto; display: block; margin: 4px 0 2px; object-fit: contain; }
         .sig-line { border-top: 1px solid var(--dark-gray); padding-top: 6px; font-size: 13px; }
         .checklist-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
         .checklist-table th { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
@@ -356,8 +357,13 @@
 
             <div id="sigSuccessMsg" style="display:none; margin-top:24px; background:#f0f9f0; border:1px solid #c3e6c3; border-radius:10px; padding:24px; text-align:center;">
                 <div style="font-size:40px; margin-bottom:12px;">✅</div>
-                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！PDF 已下載</h3>
-                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已儲存至您的裝置，請將檔案透過 LINE 傳送給出租人。</p>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
+                <p style="font-size:14px; color:#3a7a3a; margin-bottom:16px;">請點下方按鈕下載合約 PDF，再透過 LINE 傳給出租人。</p>
+                <a id="pdfDownloadBtn" href="#" download=""
+                   style="display:inline-block; background:#2d7a2d; color:white; font-size:16px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; letter-spacing:1px;">
+                    ⬇ 下載合約 PDF
+                </a>
+                <p style="font-size:12px; color:#6a9a6a; margin-top:12px;">若點擊後顯示 PDF 預覽，請長按→「下載」或「分享」→「儲存至檔案」</p>
             </div>
         </div>
     </div>
@@ -853,36 +859,18 @@ async function completeSigning() {
         }
 
         const fileName = `租賃合約_${f.room}號房_${f.name}.pdf`;
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        if (isIOS) {
-            // iOS Safari 不支援 <a download>，改用 bloburl 在新分頁開啟
-            const blobUrl = pdf.output('bloburl');
-            window.open(blobUrl, '_blank');
-            document.getElementById('sigSuccessMsg').innerHTML = `
-                <div style="font-size:40px; margin-bottom:12px;">✅</div>
-                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
-                <p style="font-size:14px; color:#3a7a3a;">PDF 已在新分頁開啟。<br>請點選右上角「分享」→「儲存至檔案」或「列印」來保存合約，再透過 LINE 傳給出租人。</p>`;
-        } else if (isMobile) {
-            // Android 等其他手機：嘗試一般下載，若失敗則開新分頁
-            try {
-                pdf.save(fileName);
-            } catch(e) {
-                const blobUrl = pdf.output('bloburl');
-                window.open(blobUrl, '_blank');
-            }
-            document.getElementById('sigSuccessMsg').innerHTML = `
-                <div style="font-size:40px; margin-bottom:12px;">✅</div>
-                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
-                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已下載或在新分頁開啟，請儲存後透過 LINE 傳給出租人。</p>`;
-        } else {
-            pdf.save(fileName);
-            document.getElementById('sigSuccessMsg').innerHTML = `
-                <div style="font-size:40px; margin-bottom:12px;">✅</div>
-                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！PDF 已下載</h3>
-                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已儲存至您的裝置，請將檔案透過 LINE 傳送給出租人。</p>`;
-        }
+        // 產生 blob，綁定到頁面下載按鈕（相容所有瀏覽器，包含 LINE WebView）
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const dlBtn = document.getElementById('pdfDownloadBtn');
+        dlBtn.href = blobUrl;
+        dlBtn.download = fileName;
+
+        // 桌面瀏覽器額外自動觸發下載
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) { pdf.save(fileName); }
+
     } catch(pdfErr) {
         console.warn('PDF 產生失敗：', pdfErr);
         alert('PDF 產生時發生錯誤，請截圖合約內容後傳給出租人，或重新整理頁面再試一次。\n錯誤：' + pdfErr.message);
