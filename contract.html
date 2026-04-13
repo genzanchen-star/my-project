@@ -75,18 +75,19 @@
         .sig-row { display: flex; gap: 32px; margin-top: 32px; }
         .sig-col { flex: 1; text-align: center; }
         .sig-col .sig-label { font-size: 13px; color: var(--warm-gray); margin-bottom: 8px; }
-        .sig-col img { max-height: 70px; display: block; margin: 0 auto 4px; }
+        .sig-col img.sig-img { max-height: 70px; display: block; margin: 0 auto 4px; }
         .sig-line { border-top: 1px solid var(--dark-gray); padding-top: 6px; font-size: 13px; }
         .checklist-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
         .checklist-table th { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
         .checklist-table td { border: 1px solid #ddd; padding: 8px 10px; }
 
         /* Share box */
-        .share-box { background: #f0f9f0; border: 1px solid #c3e6c3; border-radius: 10px; padding: 16px 20px; margin-top: 20px; }
-        .share-box p { font-size: 13px; color: #3a7a3a; margin-bottom: 10px; }
+        .share-box { background: #f0f9f0; border: 1px solid #c3e6c3; border-radius: 10px; padding: 20px; margin-top: 24px; }
+        .share-box h3 { font-size: 15px; font-weight: 600; color: #2d7a2d; margin-bottom: 8px; }
+        .share-box p { font-size: 13px; color: #3a7a3a; margin-bottom: 12px; }
         .share-url { display: flex; gap: 8px; }
-        .share-url input { flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid #c3e6c3; background: white; }
-        .share-url button { padding: 8px 14px; font-size: 13px; }
+        .share-url input { flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid #c3e6c3; background: white; color: var(--dark-gray); }
+        .share-url button { padding: 8px 16px; font-size: 13px; }
 
         /* Checklist Editor */
         .checklist-editor { margin-top: 8px; }
@@ -99,6 +100,7 @@
         .del-row:hover { color: #e74c3c; }
         .add-row-btn { margin-top: 8px; font-size: 13px; color: var(--wood); background: none; border: 1px dashed var(--wood); border-radius: 6px; padding: 6px 14px; cursor: pointer; }
         .add-row-btn:hover { background: #fff8f0; }
+
         /* Stamp upload */
         .stamp-upload-area { border: 1.5px dashed var(--light-gray); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative; }
         .stamp-upload-area:hover { border-color: var(--wood); }
@@ -106,9 +108,14 @@
         .stamp-preview { max-height: 80px; margin: 8px auto 0; display: block; }
         .stamp-hint { font-size: 13px; color: var(--warm-gray); }
 
+        /* Tenant mode banner */
+        .tenant-banner { background: #e8f4fd; border-bottom: 1px solid #b8d9f0; padding: 12px 24px; font-size: 14px; color: #1a6fa0; text-align: center; }
+        .tenant-banner strong { font-weight: 600; }
+
         /* Print */
         @media print {
-            header, .steps, .btn-actions, .card-title, #printActions, .share-box { display: none !important; }
+            header, .steps, .btn-actions, .card-title, #printActions,
+            .share-box, .tenant-banner, #tenantSigSection, .no-print { display: none !important; }
             body { background: white; font-size: 12pt; }
             .card { box-shadow: none; padding: 0; border-radius: 0; }
             .container { padding: 0; max-width: 100%; }
@@ -134,188 +141,223 @@
     <h1>電子租賃合約系統</h1>
 </header>
 
-<div class="steps">
-    <div class="step active" id="si1">
-        <div class="step-circle">1</div>
-        <span class="step-label">合約資料</span>
+<!-- ========== 出租人模式 ========== -->
+<div id="landlordMode">
+    <div class="steps">
+        <div class="step active" id="si1">
+            <div class="step-circle">1</div>
+            <span class="step-label">合約資料</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="si2">
+            <div class="step-circle">2</div>
+            <span class="step-label">承租人資料</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="si3">
+            <div class="step-circle">3</div>
+            <span class="step-label">確認發送</span>
+        </div>
     </div>
-    <div class="step-line"></div>
-    <div class="step" id="si2">
-        <div class="step-circle">2</div>
-        <span class="step-label">承租人資料</span>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" id="si3">
-        <div class="step-circle">3</div>
-        <span class="step-label">完成簽署</span>
+
+    <div class="container">
+
+        <!-- 步驟一：合約資料 -->
+        <div id="sc1" class="card">
+            <div class="card-title">步驟一：填寫合約資料（出租人填寫）</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>出租人姓名 <span class="req">*</span></label>
+                    <input type="text" id="landlordName" placeholder="請輸入出租人姓名">
+                </div>
+                <div class="form-group">
+                    <label>房號 <span class="req">*</span></label>
+                    <input type="text" id="roomNumber" placeholder="例：101、A棟201">
+                </div>
+            </div>
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>出租物件地址 <span class="req">*</span></label>
+                    <input type="text" id="landlordAddress" placeholder="請輸入完整地址">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>月租金（元）<span class="req">*</span></label>
+                    <input type="number" id="monthlyRent" value="6000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>押金（元）<span class="req">*</span></label>
+                    <input type="number" id="deposit" placeholder="例：12000" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>起始電度（度）</label>
+                    <input type="number" id="startElec" placeholder="0" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>租期起日 <span class="req">*</span></label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label>租期迄日 <span class="req">*</span></label>
+                    <input type="date" id="endDate">
+                </div>
+            </div>
+            <div class="form-row full">
+                <div class="form-group">
+                    <label>附加設備說明（顯示於合約第一條）</label>
+                    <input type="text" id="equipment" placeholder="電視一部、雙門冰箱一台、冷氣一部、衣櫃一個">
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">出租人印章（上傳後將隨連結傳送給承租人）</label>
+                <div class="stamp-upload-area" id="stampArea">
+                    <input type="file" id="stampFile" accept="image/png,image/jpeg" onchange="loadStamp(this)">
+                    <div id="stampHintArea">
+                        <div style="font-size:24px; color:var(--light-gray);">🔏</div>
+                        <div class="stamp-hint">點擊上傳印章圖片（PNG / JPG）</div>
+                    </div>
+                    <img id="stampPreview" class="stamp-preview" style="display:none;" alt="印章預覽">
+                    <button type="button" id="stampClear" style="display:none; margin-top:6px; font-size:12px; color:var(--warm-gray); background:none; border:none; cursor:pointer; text-decoration:underline;" onclick="clearStamp(event)">移除印章</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">入退房清點表項目</label>
+                <div class="checklist-editor">
+                    <table id="checklistTable">
+                        <thead>
+                            <tr>
+                                <th style="width:90px">類別</th>
+                                <th>項目名稱</th>
+                                <th style="width:60px">數量</th>
+                                <th style="width:70px">單位</th>
+                                <th style="width:36px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="checklistBody"></tbody>
+                    </table>
+                    <button type="button" class="add-row-btn" onclick="addCheckRow()">＋ 新增項目</button>
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-primary" onclick="toStep2()">下一步：填寫承租人資料 →</button>
+            </div>
+        </div>
+
+        <!-- 步驟二：承租人基本資料 -->
+        <div id="sc2" class="card" style="display:none">
+            <div class="card-title">步驟二：填寫承租人基本資料</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>承租人姓名 <span class="req">*</span></label>
+                    <input type="text" id="tenantName" placeholder="請輸入姓名">
+                </div>
+                <div class="form-group">
+                    <label>身分證號碼 <span class="req">*</span></label>
+                    <input type="text" id="tenantId" placeholder="A123456789">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>手機號碼 <span class="req">*</span></label>
+                    <input type="tel" id="tenantPhone" placeholder="0912345678">
+                </div>
+                <div class="form-group">
+                    <label>戶籍住址</label>
+                    <input type="text" id="tenantAddress" placeholder="請輸入戶籍地址">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>緊急聯絡人 <span class="req">*</span></label>
+                    <input type="text" id="emergencyName" placeholder="緊急聯絡人姓名">
+                </div>
+                <div class="form-group">
+                    <label>緊急聯絡電話 <span class="req">*</span></label>
+                    <input type="tel" id="emergencyPhone" placeholder="0912345678">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>與承租人關係</label>
+                    <input type="text" id="emergencyRel" placeholder="例：父母、配偶、朋友">
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary" onclick="showStep(1)">← 上一步</button>
+                <button class="btn btn-primary" onclick="toStep3()">下一步：預覽確認 →</button>
+            </div>
+        </div>
+
+        <!-- 步驟三：預覽確認 + 產生連結 -->
+        <div id="sc3" style="display:none">
+            <div class="card" id="previewCard">
+                <div class="card-title">步驟三：確認合約內容，產生承租人簽署連結</div>
+                <div id="previewContent" class="contract-preview"></div>
+            </div>
+
+            <div class="share-box" id="shareBox" style="display:none">
+                <h3>✅ 連結已產生</h3>
+                <p>請將以下連結透過 LINE 傳送給承租人，承租人點開連結即可閱讀合約並完成線上簽名。</p>
+                <div class="share-url">
+                    <input type="text" id="shareUrl" readonly>
+                    <button class="btn btn-green" onclick="copyLink()">複製連結</button>
+                </div>
+            </div>
+
+            <div class="btn-actions no-print" id="printActions">
+                <button class="btn btn-secondary" onclick="showStep(2)">← 返回修改</button>
+                <button class="btn btn-primary" onclick="generateLink()">產生承租人簽署連結 →</button>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<div class="container">
+<!-- ========== 承租人簽署模式 ========== -->
+<div id="tenantMode" style="display:none">
+    <div class="tenant-banner">
+        <strong>承租人簽署頁面</strong>｜請仔細閱讀以下合約內容，確認無誤後在下方完成簽名
+    </div>
 
-    <!-- ===== STEP 1 ===== -->
-    <div id="sc1" class="card">
-        <div class="card-title">步驟一：填寫合約資料（甲方填寫）</div>
+    <div class="container" style="padding-top: 24px;">
+        <div class="card">
+            <div id="tenantContractContent" class="contract-preview"></div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>出租人姓名 <span class="req">*</span></label>
-                <input type="text" id="landlordName" placeholder="請輸入出租人姓名">
-            </div>
-            <div class="form-group">
-                <label>房號 <span class="req">*</span></label>
-                <input type="text" id="roomNumber" placeholder="例：101、A棟201">
-            </div>
-        </div>
-        <div class="form-row full">
-            <div class="form-group">
-                <label>出租物件地址 <span class="req">*</span></label>
-                <input type="text" id="landlordAddress" placeholder="請輸入完整地址">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>月租金（元）<span class="req">*</span></label>
-                <input type="number" id="monthlyRent" value="6000" min="0">
-            </div>
-            <div class="form-group">
-                <label>押金（元）<span class="req">*</span></label>
-                <input type="number" id="deposit" placeholder="例：12000" min="0">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>起始電度（度）</label>
-                <input type="number" id="startElec" placeholder="0" min="0">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>租期起日 <span class="req">*</span></label>
-                <input type="date" id="startDate">
-            </div>
-            <div class="form-group">
-                <label>租期迄日 <span class="req">*</span></label>
-                <input type="date" id="endDate">
-            </div>
-        </div>
-        <div class="form-row full">
-            <div class="form-group">
-                <label>附加設備說明（顯示於合約第一條）</label>
-                <input type="text" id="equipment" placeholder="電視一部、雙門冰箱一台、冷氣一部、衣櫃一個">
-            </div>
-        </div>
-
-        <div style="margin-top: 24px;">
-            <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">出租人印章（選填，上傳 PNG 圖片）</label>
-            <div class="stamp-upload-area" id="stampArea">
-                <input type="file" id="stampFile" accept="image/png,image/jpeg" onchange="loadStamp(this)">
-                <div id="stampHintArea">
-                    <div style="font-size:24px; color:var(--light-gray);">🔏</div>
-                    <div class="stamp-hint">點擊上傳印章圖片（PNG / JPG）</div>
+            <div id="tenantSigSection" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--light-gray);">
+                <label style="display:block; font-size:14px; font-weight:600; margin-bottom:10px; color:var(--dark-gray);">
+                    承租人簽名 <span class="req">*</span>
+                </label>
+                <div class="sig-wrap">
+                    <canvas id="tenantSigCanvas" height="160"></canvas>
+                    <span class="sig-hint" id="tenantSigHint">請在此區域手寫簽名</span>
                 </div>
-                <img id="stampPreview" class="stamp-preview" style="display:none;" alt="印章預覽">
-                <button type="button" id="stampClear" style="display:none; margin-top:6px; font-size:12px; color:var(--warm-gray); background:none; border:none; cursor:pointer; text-decoration:underline;" onclick="clearStamp(event)">移除印章</button>
-            </div>
-        </div>
+                <button class="clear-sig" onclick="clearTenantSig()">✕ 清除重簽</button>
 
-        <div style="margin-top: 24px;">
-            <label style="display:block; font-size:13px; color:var(--warm-gray); font-weight:500; margin-bottom:8px;">入退房清點表項目</label>
-            <div class="checklist-editor">
-                <table id="checklistTable">
-                    <thead>
-                        <tr>
-                            <th style="width:90px">類別</th>
-                            <th>項目名稱</th>
-                            <th style="width:60px">數量</th>
-                            <th style="width:70px">單位</th>
-                            <th style="width:36px"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="checklistBody"></tbody>
-                </table>
-                <button type="button" class="add-row-btn" onclick="addCheckRow()">＋ 新增項目</button>
+                <div class="btn-actions" style="margin-top: 20px;">
+                    <button class="btn btn-green" style="font-size:16px; padding:14px 32px;" onclick="completeSigning()">
+                        ✓ 確認簽署並儲存 PDF
+                    </button>
+                </div>
             </div>
-        </div>
-
-        <div class="btn-actions">
-            <button class="btn btn-primary" onclick="toStep2()">下一步：承租人填寫 →</button>
         </div>
     </div>
-
-    <!-- ===== STEP 2 ===== -->
-    <div id="sc2" class="card" style="display:none">
-        <div class="card-title">步驟二：承租人基本資料（乙方填寫）</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>承租人姓名 <span class="req">*</span></label>
-                <input type="text" id="tenantName" placeholder="請輸入姓名">
-            </div>
-            <div class="form-group">
-                <label>身分證號碼 <span class="req">*</span></label>
-                <input type="text" id="tenantId" placeholder="A123456789">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>手機號碼 <span class="req">*</span></label>
-                <input type="tel" id="tenantPhone" placeholder="0912345678">
-            </div>
-            <div class="form-group">
-                <label>戶籍住址</label>
-                <input type="text" id="tenantAddress" placeholder="請輸入戶籍地址">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>緊急聯絡人 <span class="req">*</span></label>
-                <input type="text" id="emergencyName" placeholder="緊急聯絡人姓名">
-            </div>
-            <div class="form-group">
-                <label>緊急聯絡電話 <span class="req">*</span></label>
-                <input type="tel" id="emergencyPhone" placeholder="0912345678">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>與承租人關係</label>
-                <input type="text" id="emergencyRel" placeholder="例：父母、配偶、朋友">
-            </div>
-        </div>
-
-        <div style="margin-top: 20px;">
-            <label style="display:block; margin-bottom: 8px; font-size:13px; color: var(--warm-gray); font-weight:500;">承租人簽名 <span class="req">*</span></label>
-            <div class="sig-wrap">
-                <canvas id="sigCanvas" height="160"></canvas>
-                <span class="sig-hint" id="sigHint">請在此區域手寫簽名</span>
-            </div>
-            <button class="clear-sig" onclick="clearSig()">✕ 清除重簽</button>
-        </div>
-
-        <div class="btn-actions">
-            <button class="btn btn-secondary" onclick="showStep(1)">← 上一步</button>
-            <button class="btn btn-primary" onclick="toStep3()">產生合約 →</button>
-        </div>
-    </div>
-
-    <!-- ===== STEP 3 ===== -->
-    <div id="sc3" style="display:none">
-        <div class="card" id="contractCard">
-            <div id="contractContent" class="contract-preview"></div>
-        </div>
-        <div class="btn-actions" id="printActions" style="margin-top: 16px;">
-            <button class="btn btn-secondary" onclick="showStep(2)">← 返回修改</button>
-            <button class="btn btn-primary" onclick="window.print()">🖨 列印 / 儲存 PDF</button>
-        </div>
-    </div>
-
 </div>
 
 <script>
 const AGENT = { name: '陳俊仁', phone: '0936625601' };
 
-// ===== Stamp =====
+// ===== 印章 =====
 let stampDataUrl = '';
 function loadStamp(input) {
     if (!input.files || !input.files[0]) return;
@@ -338,7 +380,7 @@ function clearStamp(e) {
     document.getElementById('stampClear').style.display = 'none';
 }
 
-// ===== Checklist =====
+// ===== 清點表 =====
 const DEFAULT_ITEMS = [
     ['傢俱','衣櫃','1','個'],['傢俱','書桌','1','張'],['傢俱','椅子','1','張'],
     ['傢俱','床組','1','張'],['傢俱','床墊','1','張'],
@@ -365,64 +407,51 @@ function getChecklist() {
     const rows = document.querySelectorAll('#checklistBody tr');
     return Array.from(rows).map(tr => {
         const cells = tr.querySelectorAll('select,input');
-        return {
-            cat: cells[0].value,
-            name: cells[1].value.trim(),
-            qty: cells[2].value,
-            unit: cells[3].value.trim() || '個'
-        };
+        return { cat: cells[0].value, name: cells[1].value.trim(), qty: cells[2].value, unit: cells[3].value.trim() || '個' };
     }).filter(r => r.name);
 }
 
-window.addEventListener('load', () => {
-    DEFAULT_ITEMS.forEach(([cat,name,qty,unit]) => addCheckRow(cat,name,qty,unit));
-});
+// ===== 承租人簽名畫布 =====
+let tenantCanvas, tenantCtx, tenantDrawing = false, tenantHasSig = false;
 
-let fd = {};
-let sigDataUrl = '';
-let hasSig = false;
-
-// ===== Canvas Signature =====
-const canvas = document.getElementById('sigCanvas');
-const ctx = canvas.getContext('2d');
-let drawing = false;
-
-function initCanvas() {
+function initTenantCanvas() {
+    tenantCanvas = document.getElementById('tenantSigCanvas');
+    tenantCtx = tenantCanvas.getContext('2d');
     const ratio = window.devicePixelRatio || 1;
-    const w = canvas.parentElement.clientWidth;
-    canvas.width = w * ratio;
-    canvas.height = 160 * ratio;
-    canvas.style.width = w + 'px';
-    canvas.style.height = '160px';
-    ctx.scale(ratio, ratio);
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    const w = tenantCanvas.parentElement.clientWidth;
+    tenantCanvas.width = w * ratio;
+    tenantCanvas.height = 160 * ratio;
+    tenantCanvas.style.width = w + 'px';
+    tenantCanvas.style.height = '160px';
+    tenantCtx.scale(ratio, ratio);
+    tenantCtx.strokeStyle = '#1a1a1a';
+    tenantCtx.lineWidth = 2;
+    tenantCtx.lineCap = 'round';
+    tenantCtx.lineJoin = 'round';
+
+    function getXY(e) {
+        const r = tenantCanvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+    tenantCanvas.addEventListener('mousedown', e => { tenantDrawing = true; const p = getXY(e); tenantCtx.beginPath(); tenantCtx.moveTo(p.x, p.y); });
+    tenantCanvas.addEventListener('mousemove', e => { if (!tenantDrawing) return; const p = getXY(e); tenantCtx.lineTo(p.x, p.y); tenantCtx.stroke(); markTenantSig(); });
+    tenantCanvas.addEventListener('mouseup', () => tenantDrawing = false);
+    tenantCanvas.addEventListener('mouseleave', () => tenantDrawing = false);
+    tenantCanvas.addEventListener('touchstart', e => { e.preventDefault(); tenantDrawing = true; const p = getXY(e); tenantCtx.beginPath(); tenantCtx.moveTo(p.x, p.y); }, { passive: false });
+    tenantCanvas.addEventListener('touchmove', e => { e.preventDefault(); if (!tenantDrawing) return; const p = getXY(e); tenantCtx.lineTo(p.x, p.y); tenantCtx.stroke(); markTenantSig(); }, { passive: false });
+    tenantCanvas.addEventListener('touchend', () => tenantDrawing = false);
 }
 
-function getXY(e) {
-    const r = canvas.getBoundingClientRect();
-    const src = e.touches ? e.touches[0] : e;
-    return { x: src.clientX - r.left, y: src.clientY - r.top };
+function markTenantSig() { tenantHasSig = true; document.getElementById('tenantSigHint').style.display = 'none'; }
+function clearTenantSig() {
+    if (!tenantCtx) return;
+    tenantCtx.clearRect(0, 0, tenantCanvas.width, tenantCanvas.height);
+    tenantHasSig = false;
+    document.getElementById('tenantSigHint').style.display = 'block';
 }
 
-canvas.addEventListener('mousedown', e => { drawing = true; const p = getXY(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
-canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getXY(e); ctx.lineTo(p.x, p.y); ctx.stroke(); markSig(); });
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseleave', () => drawing = false);
-canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getXY(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, { passive: false });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const p = getXY(e); ctx.lineTo(p.x, p.y); ctx.stroke(); markSig(); }, { passive: false });
-canvas.addEventListener('touchend', () => drawing = false);
-
-function markSig() { hasSig = true; document.getElementById('sigHint').style.display = 'none'; }
-function clearSig() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasSig = false;
-    document.getElementById('sigHint').style.display = 'block';
-}
-
-// ===== Steps =====
+// ===== 步驟控制（出租人模式）=====
 function showStep(n) {
     [1,2,3].forEach(i => {
         document.getElementById('sc'+i).style.display = i===n ? 'block' : 'none';
@@ -436,58 +465,35 @@ function showStep(n) {
 function toStep2() {
     const lname = document.getElementById('landlordName').value.trim();
     const laddr = document.getElementById('landlordAddress').value.trim();
-    const room = document.getElementById('roomNumber').value.trim();
-    const rent = document.getElementById('monthlyRent').value;
-    const dep = document.getElementById('deposit').value;
-    const s = document.getElementById('startDate').value;
-    const e = document.getElementById('endDate').value;
+    const room  = document.getElementById('roomNumber').value.trim();
+    const rent  = document.getElementById('monthlyRent').value;
+    const dep   = document.getElementById('deposit').value;
+    const s     = document.getElementById('startDate').value;
+    const e     = document.getElementById('endDate').value;
     if (!lname || !laddr || !room || !rent || !dep || !s || !e) {
         alert('請填寫所有必填欄位：出租人姓名、地址、房號、月租金、押金、租期');
         return;
     }
-    if (new Date(e) <= new Date(s)) {
-        alert('租期迄日必須晚於起日');
-        return;
-    }
+    if (new Date(e) <= new Date(s)) { alert('租期迄日必須晚於起日'); return; }
     showStep(2);
-    setTimeout(initCanvas, 150);
 }
 
 function toStep3() {
     const name = document.getElementById('tenantName').value.trim();
-    const id = document.getElementById('tenantId').value.trim();
-    const phone = document.getElementById('tenantPhone').value.trim();
-    const em = document.getElementById('emergencyName').value.trim();
-    const ep = document.getElementById('emergencyPhone').value.trim();
+    const id   = document.getElementById('tenantId').value.trim();
+    const phone= document.getElementById('tenantPhone').value.trim();
+    const em   = document.getElementById('emergencyName').value.trim();
+    const ep   = document.getElementById('emergencyPhone').value.trim();
     if (!name || !id || !phone || !em || !ep) {
         alert('請填寫所有必填欄位：姓名、身分證、手機、緊急聯絡人');
         return;
     }
-    if (!hasSig) { alert('請在簽名區完成簽名'); return; }
-
-    sigDataUrl = canvas.toDataURL('image/png');
-    fd = {
-        landlordName: document.getElementById('landlordName').value.trim(),
-        landlordAddress: document.getElementById('landlordAddress').value.trim(),
-        room: document.getElementById('roomNumber').value.trim(),
-        rent: document.getElementById('monthlyRent').value,
-        deposit: document.getElementById('deposit').value,
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        elec: document.getElementById('startElec').value || '0',
-        equip: document.getElementById('equipment').value.trim() || '電視一部、雙門冰箱一台、冷氣一部、衣櫃一個',
-        checklist: getChecklist(),
-        name, id, phone,
-        address: document.getElementById('tenantAddress').value.trim() || '（未填）',
-        emName: em,
-        emPhone: ep,
-        emRel: document.getElementById('emergencyRel').value.trim() || '（未填）',
-    };
-    buildContract();
+    buildPreview();
     showStep(3);
+    document.getElementById('shareBox').style.display = 'none';
 }
 
-// ===== Date Format =====
+// ===== 日期格式 =====
 function roc(str) {
     if (!str) return '　　年　月　日';
     const d = new Date(str);
@@ -499,20 +505,20 @@ function today() {
 }
 function num(n) { return Number(n).toLocaleString(); }
 
-// ===== Build Contract =====
-function buildContract() {
-    const f = fd;
+// ===== 合約內容 HTML（共用）=====
+function contractHTML(f, sigHtml) {
     const tableRows = (f.checklist || []).map(r => `
         <tr>
             <td>${r.cat}</td><td>${r.name}</td>
             <td style="text-align:center">${r.qty} ${r.unit}</td>
             <td>■良好　□損壞</td><td></td>
         </tr>`).join('');
-    const stampHtml = stampDataUrl
-        ? `<img src="${stampDataUrl}" style="height:60px; vertical-align:middle; margin-left:8px; opacity:0.85;" alt="印章">`
+
+    const stampHtml = f.stamp
+        ? `<img src="${f.stamp}" style="height:60px; vertical-align:middle; margin-left:8px; opacity:0.85;" alt="印章">`
         : '';
 
-    document.getElementById('contractContent').innerHTML = `
+    return `
         <h2>房屋租賃合約書</h2>
         <p class="subtitle">房號：${f.room}　　簽署日期：中華民國 ${today()}</p>
 
@@ -625,7 +631,7 @@ function buildContract() {
             </div>
             <div class="sig-col">
                 <div class="sig-label">乙方（承租人）簽名</div>
-                <img src="${sigDataUrl}" alt="簽名">
+                ${sigHtml}
                 <div class="sig-line">${f.name}</div>
             </div>
         </div>
@@ -655,6 +661,109 @@ function buildContract() {
         </div>
     `;
 }
+
+// ===== 出租人預覽（無簽名）=====
+function buildPreview() {
+    const f = collectLandlordData();
+    const sigPlaceholder = `<div style="height:50px; border-top:1px dashed #ccc; margin-top:8px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:13px;">（承租人線上簽名後顯示）</div>`;
+    document.getElementById('previewContent').innerHTML = contractHTML(f, sigPlaceholder);
+}
+
+// ===== 收集出租人填寫的所有資料 =====
+function collectLandlordData() {
+    return {
+        landlordName:    document.getElementById('landlordName').value.trim(),
+        landlordAddress: document.getElementById('landlordAddress').value.trim(),
+        room:            document.getElementById('roomNumber').value.trim(),
+        rent:            document.getElementById('monthlyRent').value,
+        deposit:         document.getElementById('deposit').value,
+        startDate:       document.getElementById('startDate').value,
+        endDate:         document.getElementById('endDate').value,
+        elec:            document.getElementById('startElec').value || '0',
+        equip:           document.getElementById('equipment').value.trim() || '電視一部、雙門冰箱一台、冷氣一部、衣櫃一個',
+        checklist:       getChecklist(),
+        name:            document.getElementById('tenantName').value.trim(),
+        id:              document.getElementById('tenantId').value.trim(),
+        phone:           document.getElementById('tenantPhone').value.trim(),
+        address:         document.getElementById('tenantAddress').value.trim() || '（未填）',
+        emName:          document.getElementById('emergencyName').value.trim(),
+        emPhone:         document.getElementById('emergencyPhone').value.trim(),
+        emRel:           document.getElementById('emergencyRel').value.trim() || '（未填）',
+        stamp:           stampDataUrl,
+    };
+}
+
+// ===== 產生承租人簽署連結 =====
+function generateLink() {
+    const data = collectLandlordData();
+    try {
+        const json    = JSON.stringify(data);
+        const encoded = btoa(unescape(encodeURIComponent(json)));
+        const url     = location.origin + location.pathname + '?sign=' + encoded;
+        document.getElementById('shareUrl').value = url;
+        document.getElementById('shareBox').style.display = 'block';
+        document.getElementById('shareBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) {
+        alert('產生連結失敗，請確認印章圖片不要太大，或移除印章後再試');
+    }
+}
+
+function copyLink() {
+    const url = document.getElementById('shareUrl').value;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('連結已複製！請透過 LINE 傳送給承租人');
+    }).catch(() => {
+        document.getElementById('shareUrl').select();
+        document.execCommand('copy');
+        alert('連結已複製！請透過 LINE 傳送給承租人');
+    });
+}
+
+// ===== 承租人模式：從 URL 解碼資料 =====
+function initTenantMode(encoded) {
+    document.getElementById('landlordMode').style.display = 'none';
+    document.getElementById('tenantMode').style.display = 'block';
+    try {
+        const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        const sigPlaceholder = '';
+        document.getElementById('tenantContractContent').innerHTML = contractHTML(data, sigPlaceholder);
+        setTimeout(initTenantCanvas, 200);
+        // 儲存資料供簽署後使用
+        window._tenantData = data;
+    } catch(e) {
+        document.getElementById('tenantContractContent').innerHTML =
+            '<p style="color:red; padding:20px;">連結資料有誤，請聯繫出租人重新產生連結。</p>';
+    }
+}
+
+// ===== 承租人完成簽名、產生 PDF =====
+function completeSigning() {
+    if (!tenantHasSig) { alert('請在上方空白區域完成手寫簽名'); return; }
+
+    const sigDataUrl = tenantCanvas.toDataURL('image/png');
+    const sigHtml = `<img class="sig-img" src="${sigDataUrl}" alt="簽名">`;
+
+    // 將簽名插入合約的簽名欄
+    document.getElementById('tenantContractContent').innerHTML =
+        contractHTML(window._tenantData, sigHtml);
+
+    // 隱藏簽名區塊（列印時不顯示）
+    document.getElementById('tenantSigSection').style.display = 'none';
+
+    // 觸發列印（存成 PDF）
+    setTimeout(() => window.print(), 300);
+}
+
+// ===== 頁面載入 =====
+window.addEventListener('load', () => {
+    const params   = new URLSearchParams(location.search);
+    const signData = params.get('sign');
+    if (signData) {
+        initTenantMode(signData);
+    } else {
+        DEFAULT_ITEMS.forEach(([cat,name,qty,unit]) => addCheckRow(cat,name,qty,unit));
+    }
+});
 </script>
 </body>
 </html>
