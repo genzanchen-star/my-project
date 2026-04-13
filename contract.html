@@ -365,14 +365,14 @@ function loadStamp(input) {
     reader.onload = e => {
         const img = new Image();
         img.onload = () => {
-            // 壓縮：最大150px，JPEG 60%品質
-            const MAX = 150;
+            // 壓縮：最大60px，JPEG 15%品質（縮到幾百bytes，不影響網址長度）
+            const MAX = 60;
             const scale = Math.min(MAX / img.width, MAX / img.height, 1);
             const cv = document.createElement('canvas');
             cv.width  = Math.round(img.width  * scale);
             cv.height = Math.round(img.height * scale);
             cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-            stampDataUrl = cv.toDataURL('image/jpeg', 0.6);
+            stampDataUrl = cv.toDataURL('image/jpeg', 0.15);
             document.getElementById('stampPreview').src = stampDataUrl;
             document.getElementById('stampPreview').style.display = 'block';
             document.getElementById('stampHintArea').style.display = 'none';
@@ -526,7 +526,7 @@ function contractHTML(f, sigHtml) {
         </tr>`).join('');
 
     const stampHtml = f.stamp
-        ? `<img src="${f.stamp}" style="height:60px; vertical-align:middle; margin-left:8px; opacity:0.85;" alt="印章">`
+        ? `<img src="${f.stamp}" style="height:50px; vertical-align:middle; margin-left:8px; opacity:0.9; image-rendering:auto;" alt="印章">`
         : '';
 
     return `
