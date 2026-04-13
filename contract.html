@@ -6,6 +6,7 @@
     <title>電子租賃合約 - 安心管家</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -699,35 +700,17 @@ function collectLandlordData() {
     };
 }
 
-// ===== 產生承租人簽署連結（存至 jsonblob.com）=====
-async function generateLink() {
+// ===== 產生承租人簽署連結（lz-string 壓縮）=====
+function generateLink() {
     const data = collectLandlordData();
-    const btn = document.getElementById('generateBtn');
-    btn.disabled = true;
-    btn.textContent = '上傳中，請稍候...';
-
     try {
-        const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('上傳失敗 ' + res.status);
-
-        // ID 在 Location header 的最後一段
-        const loc = res.headers.get('Location') || '';
-        const blobId = loc.split('/').pop();
-        if (!blobId) throw new Error('未取得 ID');
-
-        const url = location.origin + location.pathname + '?id=' + blobId;
+        const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+        const url = location.origin + location.pathname + '?d=' + compressed;
         document.getElementById('shareUrl').value = url;
         document.getElementById('shareBox').style.display = 'block';
         document.getElementById('shareBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch(e) {
-        alert('連結產生失敗：' + e.message + '\n請確認網路連線後再試。');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '產生承租人簽署連結 →';
+        alert('連結產生失敗：' + e.message);
     }
 }
 
@@ -742,25 +725,18 @@ function copyLink() {
     });
 }
 
-// ===== 承租人模式：從 jsonblob.com 載入資料 =====
-async function loadTenantMode(blobId) {
+// ===== 承租人模式：從 URL 解壓縮資料 =====
+function loadTenantMode(compressed) {
     document.getElementById('landlordMode').style.display = 'none';
     document.getElementById('tenantMode').style.display = 'block';
-    document.getElementById('tenantContractContent').innerHTML =
-        '<p style="text-align:center; padding:60px; color:var(--warm-gray);">合約載入中，請稍候...</p>';
-
     try {
-        const res = await fetch('https://jsonblob.com/api/jsonBlob/' + blobId, {
-            headers: { 'Accept': 'application/json' }
-        });
-        if (!res.ok) throw new Error('載入失敗 ' + res.status);
-        const data = await res.json();
+        const data = JSON.parse(LZString.decompressFromEncodedURIComponent(compressed));
         window._tenantData = data;
         document.getElementById('tenantContractContent').innerHTML = contractHTML(data, '');
         setTimeout(initTenantCanvas, 200);
     } catch(e) {
         document.getElementById('tenantContractContent').innerHTML =
-            '<p style="color:red; padding:20px;">合約載入失敗，請聯繫出租人重新產生連結。<br><small>' + e.message + '</small></p>';
+            '<p style="color:red; padding:20px;">連結資料有誤，請聯繫出租人重新產生連結。</p>';
     }
 }
 
@@ -785,9 +761,9 @@ function completeSigning() {
 // ===== 頁面載入 =====
 window.addEventListener('load', () => {
     const params = new URLSearchParams(location.search);
-    const blobId = params.get('id');
-    if (blobId) {
-        loadTenantMode(blobId);
+    const compressed = params.get('d');
+    if (compressed) {
+        loadTenantMode(compressed);
     } else {
         DEFAULT_ITEMS.forEach(([cat,name,qty,unit]) => addCheckRow(cat,name,qty,unit));
     }
