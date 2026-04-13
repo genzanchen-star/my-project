@@ -852,9 +852,40 @@ async function completeSigning() {
             page++;
         }
 
-        pdf.save(`租賃合約_${f.room}號房_${f.name}.pdf`);
+        const fileName = `租賃合約_${f.room}號房_${f.name}.pdf`;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isIOS) {
+            // iOS Safari 不支援 <a download>，改用 bloburl 在新分頁開啟
+            const blobUrl = pdf.output('bloburl');
+            window.open(blobUrl, '_blank');
+            document.getElementById('sigSuccessMsg').innerHTML = `
+                <div style="font-size:40px; margin-bottom:12px;">✅</div>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
+                <p style="font-size:14px; color:#3a7a3a;">PDF 已在新分頁開啟。<br>請點選右上角「分享」→「儲存至檔案」或「列印」來保存合約，再透過 LINE 傳給出租人。</p>`;
+        } else if (isMobile) {
+            // Android 等其他手機：嘗試一般下載，若失敗則開新分頁
+            try {
+                pdf.save(fileName);
+            } catch(e) {
+                const blobUrl = pdf.output('bloburl');
+                window.open(blobUrl, '_blank');
+            }
+            document.getElementById('sigSuccessMsg').innerHTML = `
+                <div style="font-size:40px; margin-bottom:12px;">✅</div>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！</h3>
+                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已下載或在新分頁開啟，請儲存後透過 LINE 傳給出租人。</p>`;
+        } else {
+            pdf.save(fileName);
+            document.getElementById('sigSuccessMsg').innerHTML = `
+                <div style="font-size:40px; margin-bottom:12px;">✅</div>
+                <h3 style="font-size:18px; color:#2d7a2d; margin-bottom:8px;">簽署完成！PDF 已下載</h3>
+                <p style="font-size:14px; color:#3a7a3a;">合約 PDF 已儲存至您的裝置，請將檔案透過 LINE 傳送給出租人。</p>`;
+        }
     } catch(pdfErr) {
         console.warn('PDF 產生失敗：', pdfErr);
+        alert('PDF 產生時發生錯誤，請截圖合約內容後傳給出租人，或重新整理頁面再試一次。\n錯誤：' + pdfErr.message);
     }
 
     document.getElementById('sigSuccessMsg').style.display = 'block';
