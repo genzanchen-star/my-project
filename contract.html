@@ -821,46 +821,29 @@ async function completeSigning() {
     document.getElementById('tenantContractContent').innerHTML = contractHTML(f, sigHtml);
     document.getElementById('tenantSigSection').style.display = 'none';
 
-    // ── 產生 PDF ──
+    // ── 產生 PDF（使用 html() + autoPaging 避免文字截斷）──
     try {
         const contractEl = document.getElementById('tenantContractContent');
-        const canvas = await html2canvas(contractEl, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        });
-
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageW = pdf.internal.pageSize.getWidth();
-        const pageH = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const imgW = pageW - margin * 2;
-        const scale = imgW / (canvas.width / 2); // canvas was rendered @2x
-        const totalH = (canvas.height / 2) * scale;
-        const pageContentH = pageH - margin * 2;
-
-        let yOffset = 0;
-        let page = 0;
-        while (yOffset < totalH) {
-            if (page > 0) pdf.addPage();
-            // slice source canvas pixels for this page
-            const srcY = (yOffset / scale) * 2;           // back to @2x pixels
-            const srcH = Math.min((pageContentH / scale) * 2, canvas.height - srcY);
-            const sliceCanvas = document.createElement('canvas');
-            sliceCanvas.width  = canvas.width;
-            sliceCanvas.height = srcH;
-            sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
-            const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
-            const sliceH = srcH / 2 * scale;              // mm height on page
-            pdf.addImage(sliceImg, 'JPEG', margin, margin, imgW, sliceH);
-            yOffset += pageContentH;
-            page++;
-        }
-
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
         const filename = `租賃合約_${f.room}號房_${f.name}.pdf`;
-        pdf.save(filename);
+        await new Promise((resolve) => {
+            pdf.html(contractEl, {
+                callback: (doc) => { doc.save(filename); resolve(); },
+                x: 10,
+                y: 10,
+                width: 190,
+                windowWidth: 800,
+                autoPaging: 'text',
+                margin: [10, 10, 10, 10],
+                html2canvas: {
+                    scale: 1.5,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                }
+            });
+        });
     } catch(pdfErr) {
         console.warn('PDF 產生失敗：', pdfErr);
     }
